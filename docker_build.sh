@@ -1,0 +1,1 @@
+docker build -t ros2-kortex -f Dockerfile  .
