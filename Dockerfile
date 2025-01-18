@@ -289,9 +289,11 @@ RUN sudo apt-get update
 RUN rosdep install --from-paths . src --ignore-src -r -y
 
 # RUN vcs import src --skip-existing --input https://raw.githubusercontent.com/ros-controls/ros2_control_ci/master/ros_controls.$ROS_DISTRO.repos
-RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex.humble.repos
-RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex-not-released.jazzy.repos
+# RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex.humble.repos
+# RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex-not-released.humble.repos
 # RUN vcs import src --skip-existing --input src/ros2_kortex/simulation.humble.repos
+
+RUN vcs import src --skip-existing --input required.repos
 
 # Build the workspace with resource management
 RUN source /opt/ros/humble/setup.bash && \
