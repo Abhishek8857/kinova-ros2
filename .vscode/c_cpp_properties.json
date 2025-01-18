@@ -1,0 +1,49 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/abhishek/workspaces/whisper_ws/install/whisper_msgs/include/**",
+        "/home/abhishek/workspaces/whisper_ws/install/whisper_cpp_vendor/include/**",
+        "/home/abhishek/workspaces/whisper_ws/install/audio_common_msgs/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_planners/chomp/chomp_interface/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_planners/chomp/chomp_motion_planner/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_planners/pilz_industrial_motion_planner/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_planners/pilz_industrial_motion_planner_testutils/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_planners/test_configs/prbt_ikfast_manipulator_plugin/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_plugins/moveit_ros_control_interface/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_plugins/moveit_simple_controller_manager/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_ros/benchmarks/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_ros/move_group/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_ros/moveit_servo/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_ros/occupancy_map_monitor/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_ros/robot_interaction/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_ros/warehouse/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_setup_assistant/moveit_setup_app_plugins/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_setup_assistant/moveit_setup_assistant/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_setup_assistant/moveit_setup_controllers/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_setup_assistant/moveit_setup_core_plugins/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_setup_assistant/moveit_setup_framework/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit2/moveit_setup_assistant/moveit_setup_srdf_plugins/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit_task_constructor/core/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit_task_constructor/demo/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/moveit_task_constructor/rviz_marker_tools/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/ros2_kortex/kortex_driver/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/colcon_ws/src/ros2_kortex_vision/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener/include/**",
+        "/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/robot_actions/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

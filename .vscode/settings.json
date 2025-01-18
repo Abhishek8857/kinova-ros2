@@ -1,0 +1,22 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/abhishek/workspaces/whisper_ws/install/whisper_msgs/local/lib/python3.10/dist-packages",
+        "/home/abhishek/workspaces/whisper_ws/install/whisper_listen/lib/python3.10/site-packages",
+        "/home/abhishek/workspaces/whisper_ws/install/audio_common/local/lib/python3.10/dist-packages",
+        "/home/abhishek/workspaces/whisper_ws/install/audio_common_msgs/local/lib/python3.10/dist-packages",
+        "/home/abhishek/workspaces/agent_ws/build/kinova_agent",
+        "/home/abhishek/workspaces/agent_ws/install/kinova_agent/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/abhishek/workspaces/whisper_ws/install/whisper_msgs/local/lib/python3.10/dist-packages",
+        "/home/abhishek/workspaces/whisper_ws/install/whisper_listen/lib/python3.10/site-packages",
+        "/home/abhishek/workspaces/whisper_ws/install/audio_common/local/lib/python3.10/dist-packages",
+        "/home/abhishek/workspaces/whisper_ws/install/audio_common_msgs/local/lib/python3.10/dist-packages",
+        "/home/abhishek/workspaces/agent_ws/build/kinova_agent",
+        "/home/abhishek/workspaces/agent_ws/install/kinova_agent/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}

@@ -10,4 +10,4 @@ source /colcon_ws/install/setup.bash
 source /overlay_ws/install/setup.bash
 
 # Run additional commands
-ros2 launch base_node_python base_node_python.launch.py
+# ros2 launch base_node_python base_node_python.launch.py
