@@ -1,0 +1,60 @@
+[0.214s] colcon DEBUG Command line arguments: ['/usr/bin/colcon', 'list', '-p', '--base-paths', '/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws']
+[0.214s] colcon DEBUG Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='list', build_base='build', ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], topological_order=False, names_only=False, paths_only=True, topological_graph=False, topological_graph_dot=False, topological_graph_density=False, topological_graph_legend=False, topological_graph_dot_cluster=False, topological_graph_dot_include_skipped=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x7f28aec7dde0>, verb_extension=<colcon_package_information.verb.list.ListVerb object at 0x7f28aee429e0>, main=<bound method ListVerb.main of <colcon_package_information.verb.list.ListVerb object at 0x7f28aee429e0>>, mixin_verb=('list',))
+[0.631s] colcon.colcon_core.package_discovery Level 1 discover_packages(colcon_meta) check parameters
+[0.631s] colcon.colcon_core.package_discovery Level 1 discover_packages(recursive) check parameters
+[0.631s] colcon.colcon_core.package_discovery Level 1 discover_packages(ignore) check parameters
+[0.631s] colcon.colcon_core.package_discovery Level 1 discover_packages(path) check parameters
+[0.631s] colcon.colcon_core.package_discovery Level 1 discover_packages(recursive) discover
+[0.632s] colcon.colcon_core.package_discovery INFO Crawling recursively for packages in '/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws'
+[0.632s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extensions ['ignore', 'ignore_ament_install']
+[0.632s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extension 'ignore'
+[0.632s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extension 'ignore_ament_install'
+[0.632s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extensions ['colcon_pkg']
+[0.632s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extension 'colcon_pkg'
+[0.632s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extensions ['colcon_meta']
+[0.632s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extension 'colcon_meta'
+[0.632s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extensions ['ros']
+[0.632s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extension 'ros'
+[0.653s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extensions ['cmake', 'python']
+[0.653s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extension 'cmake'
+[0.654s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extension 'python'
+[0.654s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extensions ['python_setup_py']
+[0.654s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws) by extension 'python_setup_py'
+[0.654s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/log) by extensions ['ignore', 'ignore_ament_install']
+[0.654s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/log) by extension 'ignore'
+[0.654s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/log) ignored
+[0.655s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extensions ['ignore', 'ignore_ament_install']
+[0.655s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extension 'ignore'
+[0.655s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extension 'ignore_ament_install'
+[0.655s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extensions ['colcon_pkg']
+[0.655s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extension 'colcon_pkg'
+[0.655s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extensions ['colcon_meta']
+[0.655s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extension 'colcon_meta'
+[0.655s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extensions ['ros']
+[0.655s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extension 'ros'
+[0.656s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extensions ['cmake', 'python']
+[0.656s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extension 'cmake'
+[0.656s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extension 'python'
+[0.656s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extensions ['python_setup_py']
+[0.656s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src) by extension 'python_setup_py'
+[0.656s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener) by extensions ['ignore', 'ignore_ament_install']
+[0.656s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener) by extension 'ignore'
+[0.656s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener) by extension 'ignore_ament_install'
+[0.656s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener) by extensions ['colcon_pkg']
+[0.656s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener) by extension 'colcon_pkg'
+[0.657s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener) by extensions ['colcon_meta']
+[0.657s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener) by extension 'colcon_meta'
+[0.657s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener) by extensions ['ros']
+[0.657s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener) by extension 'ros'
+[0.661s] colcon.colcon_core.package_identification DEBUG Package '/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/agent_listener' with type 'ros.ament_cmake' and name 'agent_listener'
+[0.662s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/base_node_python) by extensions ['ignore', 'ignore_ament_install']
+[0.662s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/base_node_python) by extension 'ignore'
+[0.662s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/base_node_python) by extension 'ignore_ament_install'
+[0.662s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/base_node_python) by extensions ['colcon_pkg']
+[0.662s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/base_node_python) by extension 'colcon_pkg'
+[0.662s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/base_node_python) by extensions ['colcon_meta']
+[0.662s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/base_node_python) by extension 'colcon_meta'
+[0.663s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/base_node_python) by extensions ['ros']
+[0.663s] colcon.colcon_core.package_identification Level 1 _identify(/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/base_node_python) by extension 'ros'
+[0.666s] colcon.colcon_core.package_identification DEBUG Package '/home/abhishek/workspaces/kinova_ws/src/kinova-ros2/overlay_ws/src/base_node_python' with type 'ros.ament_python' and name 'base_node_python'
+[0.666s] colcon.colcon_core.package_discovery Level 1 discover_packages(recursive) using defaults

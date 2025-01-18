@@ -17,7 +17,7 @@ docker run \
     --volume /etc/localtime:/etc/localtime:ro \
     --volume /etc/timezone:/etc/timezone:ro \
     --name test \
-    ros2-kortex-womoveit \
+    ros2-kortex-vision-moveit \
     bash
 
 
