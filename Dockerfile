@@ -268,7 +268,7 @@ RUN apt-get update && apt-get install -y libignition-gazebo6 libignition-gazebo6
 RUN apt-get update --fix-missing -y
 
 # Copy the entire colcon_ws  and overlay_ws directory with the submodule into the Docker image
-COPY colcon_ws/ /colcon_ws
+COPY colcon_ws/ /colcon_ws/
 WORKDIR /colcon_ws/src/
 
 # Update package lists and import MoveIt repositories based on the specified ROS distribution
@@ -284,16 +284,18 @@ WORKDIR /colcon_ws/
 RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 
 # Import additional repositories using vcs
+
+
+# RUN vcs import src --skip-existing --input https://raw.githubusercontent.com/ros-controls/ros2_control_ci/master/ros_controls.humble.repos
+# RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex.humble.repos
+# RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex-not-released.humble.repos
+# RUN vcs import src --skip-existing --input src/ros2_kortex/simulation.humble.repos
+
+RUN vcs import src --skip-existing --input src/required.repos
+
 RUN rosdep update
 RUN sudo apt-get update
 RUN rosdep install --from-paths . src --ignore-src -r -y
-
-# RUN vcs import src --skip-existing --input https://raw.githubusercontent.com/ros-controls/ros2_control_ci/master/ros_controls.$ROS_DISTRO.repos
-RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex.humble.repos
-RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex-not-released.humble.repos
-RUN vcs import src --skip-existing --input src/ros2_kortex/simulation.humble.repos
-
-RUN vcs import src --skip-existing --input src/required.repos
 
 # Build the workspace with resource management
 RUN source /opt/ros/humble/setup.bash && \
