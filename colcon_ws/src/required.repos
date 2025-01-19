@@ -1,4 +1,29 @@
 repositories:
+  picknik_controllers:
+    type: git
+    url: https://github.com/picknikrobotics/picknik_controllers.git
+    version: main
+
+  ros2_robotiq_gripper:
+    type: git
+    url: https://github.com/picknikrobotics/ros2_robotiq_gripper.git
+    version: b6136bdc866a929bfb096890ca61dde1335ffd30
+
+  serial:
+    type: git
+    url: https://github.com/tylerjw/serial.git
+    version: ros2
+
+  realtime_tools:
+    type: git
+    url: https://github.com/ros-controls/realtime_tools.git
+    version: humble
+
+  ros2_controllers:
+    type: git
+    url: https://github.com/ros-controls/ros2_controllers.git
+    version: 92868985c1783baa33908c3cbbc5865f1328219d
+
   control_msgs:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
@@ -8,53 +33,24 @@ repositories:
     type: git
     url: https://github.com/ros-controls/ros2_control.git
     version: humble
-  
-  ros2_controllers:
-    type: git
-    url: https://github.com/ros-controls/ros2_controllers.git
-    version: humble
-  
+
   ros2_robotiq_gripper:
     type: git
     url: https://github.com/picknikrobotics/ros2_robotiq_gripper.git
     version: b6136bdc866a929bfb096890ca61dde1335ffd30
-  
+
   gazebo_ros2_control:
     type: git
-    url: https://github.com/ros-controls/gazebo_ros2_control.git
+    url: https://github.com/ros-simulation/gazebo_ros2_control.git
     version: humble
-  
+
   gz_ros2_control:
     type: git
     url: https://github.com/ros-controls/gz_ros2_control.git
     version: humble
-  
-  kinematics_interface:
-    type: git
-    url: https://github.com/ros-controls/kinematics_interface.git
-    version: humble
-  
-  realtime_tools:
-    type: git
-    url: https://github.com/ros-controls/realtime_tools.git
-    version: master
-  
-  ros2_control_demos:
-    type: git
-    url: https://github.com/ros-controls/ros2_control_demos.git
-    version: humble
-  
-  picknik_controllers:
-    type: git
-    url: https://github.com/picknikrobotics/picknik_controllers.git
-    version: main
-  
-  serial:
-    type: git
-    url: https://github.com/tylerjw/serial.git
-    version: ros2
-  
+
   ros_gz:
     type: git
     url: https://github.com/gazebosim/ros_gz.git
     version: humble
+
