@@ -207,7 +207,8 @@
 
 
 # Use the specified ROS 2 Humble desktop image as the base
-FROM osrf/ros:humble-desktop
+ARG ROS_DISTRO=humble
+FROM osrf/ros:${ROS_DISTRO}-desktop
 
 # Source the workspace
 RUN echo "source /colcon_ws/install/setup.bash" >> ~/.bashrc
