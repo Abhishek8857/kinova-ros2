@@ -8,15 +8,15 @@ This repository provides a Dockerized environment for working with the ROS 2 Kor
 
 ## Setup Instructions
 
-### 0. Network Setup
-For network setup, please follow the instructions from the  [kinova ROS 1](https://git-ce.rwth-aachen.de/wzl-mq-ms/docker-ros/ros/kinova-ros)
+<!-- ### 0. Network Setup -->
+<!-- For network setup, please follow the instructions from the  [kinova ROS 1](https://git-ce.rwth-aachen.de/wzl-mq-ms/docker-ros/ros/kinova-ros) -->
 
 ### 1. Clone This Repository
 
 Clone this repository along with its submodules to your local machine (make sure you're cloning from the right branch):
 
 ```sh
-git clone --recurse-submodules https://git-ce.rwth-aachen.de/wzl-mq-ms/docker-ros/ros2/kinova-ros2
+git clone --recurse-submodules https://github.com/Abhishek8857/kinova-ros2.git
 cd /kinova-ros2
 ```
 If you’ve already cloned the repository without submodules, you can initialize and update the submodules like this:
@@ -43,7 +43,7 @@ Once the Docker image is built, you can run the container interactively using:
 
 ```sh
 cd docker_run/
-bash docker_run.sh
+bash docker_vision.sh
 ```
 
 This will start a new container from the ros2-kortex:latest image, allowing you to interact with the ROS 2 environment.
