@@ -203,9 +203,6 @@
 
 
 ####################### DOCKER FILE WITH MOVEIT AND KORTEX VISION ######################
-
-
-
 # Use the specified ROS 2 Humble desktop image as the base
 ARG ROS_DISTRO=humble
 FROM osrf/ros:${ROS_DISTRO}-desktop
@@ -237,6 +234,8 @@ RUN apt-get update && apt-get install -y \
     ros-humble-ros2-control \
     ros-humble-ros2-controllers \
     ros-humble-xacro \
+    ros-humble-topic-based-ros2-control \
+    ros-humble-tf-transformations \
     ros-humble-ros-gz-bridge \
     ros-humble-gazebo-ros-pkgs \
     ros-humble-gazebo-ros2-control \
@@ -286,12 +285,6 @@ RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 
 # Import additional repositories using vcs
 
-
-# RUN vcs import src --skip-existing --input https://raw.githubusercontent.com/ros-controls/ros2_control_ci/master/ros_controls.humble.repos
-# RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex.humble.repos
-# RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex-not-released.humble.repos
-# RUN vcs import src --skip-existing --input src/ros2_kortex/simulation.humble.repos
-
 RUN vcs import src --skip-existing --input src/required.repos
 
 RUN rosdep update
@@ -302,14 +295,16 @@ RUN rosdep install --from-paths . src --ignore-src -r -y
 RUN source /opt/ros/humble/setup.bash && \
     MAKEFLAGS="-j4 -l2" colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --parallel-workers 3 --symlink-install --executor sequential
 
+
+RUN apt-get update && apt-get upgrade -y
+
 # Copy cyclonedds config files
-COPY cyclonedds/config.xml /config.xml
-COPY cyclonedds/10-cyclone-max.conf /etc/sysctl.d/10-cyclone-max.conf
+# COPY cyclonedds/config.xml /config.xml
+# COPY cyclonedds/10-cyclone-max.conf /etc/sysctl.d/10-cyclone-max.conf
 
 # Copy entrypoint scripts and make them executable
 COPY entrypoint_scripts/ /entrypoint_scripts/
 RUN chmod +x /entrypoint_scripts/*.sh
-RUN apt-get update && apt-get upgrade -y
 
 # Copy contents in overlay ws
 COPY overlay_ws/ /overlay_ws/
