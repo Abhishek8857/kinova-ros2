@@ -31,6 +31,7 @@ from moveit_configs_utils import MoveItConfigsBuilder
 def launch_setup(context, *args, **kwargs):
     # Initialize Arguments
     robot_ip = LaunchConfiguration("robot_ip")
+    vision = LaunchConfiguration("vision")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     gripper_max_velocity = LaunchConfiguration("gripper_max_velocity")
     gripper_max_force = LaunchConfiguration("gripper_max_force")
@@ -40,6 +41,7 @@ def launch_setup(context, *args, **kwargs):
 
     launch_arguments = {
         "robot_ip": robot_ip,
+        "vision": vision, # changed
         "use_fake_hardware": use_fake_hardware,
         "gripper": "robotiq_2f_85",
         "gripper_joint_name": "robotiq_85_left_knuckle_joint",
@@ -52,22 +54,23 @@ def launch_setup(context, *args, **kwargs):
     moveit_config = (
         MoveItConfigsBuilder("gen3", package_name="robot_launch")
         .robot_description(mappings=launch_arguments)
+        .robot_description_semantic(mappings=launch_arguments)  # changed
         .trajectory_execution(file_path="config/moveit_controllers.yaml")
         .robot_description_kinematics(file_path="config/kinematics.yaml")
         .planning_scene_monitor(
             publish_robot_description=True, publish_robot_description_semantic=True
         )
-        .sensors_3d(file_path="config/sensors_3d.yaml")
         .joint_limits(file_path="config/joint_limits.yaml")
         .planning_pipelines(pipelines=["ompl", "pilz_industrial_motion_planner"])
+        .pilz_cartesian_limits() # changed
         .to_moveit_configs()
     )
 
     moveit_config.moveit_cpp.update({"use_sim_time": use_sim_time.perform(context) == "true"})
     
     octomap_config = {'octomap_frame': 'camera_rgb_optical_frame', 
-                    'octomap_resolution': 0.01,
-                    'max_range': 5.0}
+                      'octomap_resolution': 0.01,
+                      'max_range': 5.0}
     
     # Load  ExecuteTaskSolutionCapability so we can execute found solutions in simulation
     move_group_capabilities = {"capabilities": "move_group/ExecuteTaskSolutionCapability"}
@@ -79,7 +82,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             moveit_config.to_dict(),
             move_group_capabilities,
-            octomap_config
+            # octomap_config
         ],
     )
 
@@ -92,13 +95,21 @@ def launch_setup(context, *args, **kwargs):
         arguments=["--frame-id", "world", "--child-frame-id", "base_link"],
     )
 
-    static_tf_camera = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="static_transform_publisher_camera",
-        output="log",
-        arguments=["0.2", "0", "1.5", "0", "0", "0", "base_link", "camera_link"],
-    )
+    # static_tf_camera = Node(
+    #     package="tf2_ros",
+    #     executable="static_transform_publisher",
+    #     name="static_transform_publisher_camera",
+    #     output="log",
+    #     arguments=["0.2", "0", "1.5", "0", "0", "0", "base_link", "camera_link"],
+    # )
+
+    # static_tf_camera = Node(
+    #     package="tf2_ros",
+    #     executable="static_transform_publisher",
+    #     name="static_transform_publisher_camera",
+    #     output="log",
+    #     arguments=["0.00987", "-0.02", "0", "-1.5708", "0", "-1.5708", "gen3_bracelet_link", "wrist_mounted_camera_color_optical_frame"]
+    # )
 
     # Publish TF
     robot_state_publisher = Node(
@@ -113,14 +124,15 @@ def launch_setup(context, *args, **kwargs):
 
     # ros2_control using FakeSystem as hardware
     ros2_controllers_path = os.path.join(
-        get_package_share_directory("robot_launch"),
+        get_package_share_directory("kinova_gen3_7dof_robotiq_2f_85_moveit_config"),
         "config",
         "ros2_controllers.yaml",
     )
+    
     ros2_control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[moveit_config.robot_description, ros2_controllers_path],
+        parameters=[moveit_config.robot_description, ros2_controllers_path], # changed
         remappings=[
             ("/controller_manager/robot_description", "/robot_description"),
         ],
@@ -203,7 +215,6 @@ def launch_setup(context, *args, **kwargs):
         fault_controller_spawner,
         move_group_node,
         static_tf,
-        static_tf_camera
     ]
 
     return nodes_to_start
@@ -218,7 +229,13 @@ def generate_launch_description():
             description="IP address by which the robot can be reached.",
         )
     )
-
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "vision",
+            default_value="true",
+            description="Enable vision",
+        )
+    )    
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_fake_hardware",

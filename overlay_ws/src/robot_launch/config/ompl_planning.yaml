@@ -29,6 +29,8 @@ request_adapters: >-
   default_planner_request_adapters/FixStartStateCollision
   default_planner_request_adapters/FixStartStatePathConstraints
 start_state_max_bounds_error: 0.1
+default_planner_config: RRTConnectkConfigDefault
+
 planner_configs:
   SBLkConfigDefault:
     type: geometric::SBL

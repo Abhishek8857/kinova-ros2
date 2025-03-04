@@ -41,7 +41,7 @@ private:
 };
 
 MTCTaskNode::MTCTaskNode(const rclcpp::NodeOptions& options)
-  : node_{ std::make_shared<rclcpp::Node>("pnp_node", options) }
+  : node_{ std::make_shared<rclcpp::Node>("motion_plan", options) }
 {
 }
 
@@ -57,16 +57,47 @@ void MTCTaskNode::setupPlanningScene()
   object.header.frame_id = "world";
   object.primitives.resize(1);
   object.primitives[0].type = shape_msgs::msg::SolidPrimitive::CYLINDER;
-  object.primitives[0].dimensions = { 0.05, 0.02 };
+  object.primitives[0].dimensions = { 0.02, 0.02 };
 
   geometry_msgs::msg::Pose pose;
-  pose.position.x = 0.5;
-  pose.position.y = -0.25;
-  pose.orientation.w = 1.0;
+
+  pose.position.x = 0.4;
+  pose.position.y = -0.05;
+  pose.position.z = 0.04;
+  pose.orientation.x = 1.0;
+  pose.orientation.y = 0.0;
+  pose.orientation.z = 0.0;
+  pose.orientation.w = 0.0;
+
+  
+
   object.pose = pose;
 
   moveit::planning_interface::PlanningSceneInterface psi;
   psi.applyCollisionObject(object);
+  
+  // Create collision object for the robot to avoid
+  
+  moveit_msgs::msg::CollisionObject table;
+  table.id = "table";
+  table.header.frame_id = "world";
+  table.operation = table.ADD;
+  table.primitives.resize(1);
+  table.primitives[0].type = shape_msgs::msg::SolidPrimitive::BOX;
+  table.primitives[0].dimensions = { 1.5, 1.5, 0.01 };
+
+  geometry_msgs::msg::Pose table_pose;
+  table_pose.position.x = 0.0;
+  table_pose.position.y = 0.0;
+  table_pose.position.z = -0.02;
+  table_pose.orientation.x = 0.0;
+  table_pose.orientation.y = 0.0;
+  table_pose.orientation.z = 0.0;
+  table_pose.orientation.w = 1.0;
+  table.pose = table_pose;
+
+  psi.applyCollisionObject(table);
+
 }
 
 void MTCTaskNode::doTask()
@@ -125,33 +156,42 @@ mtc::Task MTCTaskNode::createTask()
   current_state_ptr = stage_state_current.get();
   task.add(std::move(stage_state_current));
 
+  const double max_velocity_scaling_factor = 0.4;
+  const double max_acceleration_scaling_factor = 0.4;
+
   auto sampling_planner = std::make_shared<mtc::solvers::PipelinePlanner>(node_);
+  sampling_planner->setMaxVelocityScalingFactor(max_velocity_scaling_factor);
+  sampling_planner->setMaxAccelerationScalingFactor(max_acceleration_scaling_factor);
+
   auto interpolation_planner = std::make_shared<mtc::solvers::JointInterpolationPlanner>();
+  interpolation_planner->setMaxVelocityScalingFactor(max_velocity_scaling_factor);
+  interpolation_planner->setMaxAccelerationScalingFactor(max_acceleration_scaling_factor);
 
   auto cartesian_planner = std::make_shared<mtc::solvers::CartesianPath>();
-  cartesian_planner->setMaxVelocityScalingFactor(1.0);
-  cartesian_planner->setMaxAccelerationScalingFactor(1.0);
-  cartesian_planner->setStepSize(.01);
+  cartesian_planner->setMaxVelocityScalingFactor(max_velocity_scaling_factor);
+  cartesian_planner->setMaxAccelerationScalingFactor(max_acceleration_scaling_factor);
+    // cartesian_planner->setStepSize(0.1);
 
   auto stage = std::make_unique<mtc::stages::MoveTo>("start at observation", interpolation_planner);
   stage->properties().configureInitFrom(mtc::Stage::PARENT, { "group" });
   // Define the joint values for the target pose
   std::map<std::string, double> joint_values = {
       {"joint_1", 0.0},
-      {"joint_2", -0.8650},
-      {"joint_3", -3.15353},
-      {"joint_4", -2.1302},
-      {"joint_5", 0.00588},
-      {"joint_6", -1.2077},
-      {"joint_7", 1.55037}
+      {"joint_2", -0.8},
+      {"joint_3", -3.15},
+      {"joint_4", -2.0},
+      {"joint_5", 0.0},
+      {"joint_6", -1.2},
+      {"joint_7", 1.55}
   };
   stage->setGoal(joint_values);
   task.add(std::move(stage));
-  auto stage_Open_hand =
+
+  auto stage_open_hand =
       std::make_unique<mtc::stages::MoveTo>("Open hand", interpolation_planner);
-  stage_Open_hand->setGroup(hand_group_name);
-  stage_Open_hand->setGoal("Open");
-  task.add(std::move(stage_Open_hand));
+  stage_open_hand->setGroup(hand_group_name);
+  stage_open_hand->setGoal("Open");
+  task.add(std::move(stage_open_hand));
 
   auto stage_move_to_pick = std::make_unique<mtc::stages::Connect>(
     "move to pick",
@@ -193,16 +233,18 @@ mtc::Task MTCTaskNode::createTask()
         stage->setObject("object");
         stage->setAngleDelta(M_PI / 12);
         stage->setMonitoredStage(current_state_ptr);  // Hook into current state
+        
+        
         Eigen::Isometry3d grasp_frame_transform;
-        Eigen::Quaterniond q = Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitX()) *
-                              Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitY()) *
-                              Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitZ());
+        Eigen::Quaterniond q = Eigen::AngleAxisd(M_PI / 30 , Eigen::Vector3d::UnitX()) *
+                              Eigen::AngleAxisd(M_PI / 30, Eigen::Vector3d::UnitY()) *
+                              Eigen::AngleAxisd(M_PI / 30, Eigen::Vector3d::UnitZ());
         grasp_frame_transform.linear() = q.matrix();
-        grasp_frame_transform.translation().z() = 0.1;
+        grasp_frame_transform.translation().z() = 0.15;
           // Compute IK
         auto wrapper =
         std::make_unique<mtc::stages::ComputeIK>("grasp pose IK", std::move(stage));
-        wrapper->setMaxIKSolutions(8);
+        wrapper->setMaxIKSolutions(10);
         wrapper->setMinSolutionDistance(1.0);
         wrapper->setIKFrame(grasp_frame_transform, hand_frame);
         wrapper->properties().configureInitFrom(mtc::Stage::PARENT, { "eef", "group" });
@@ -260,12 +302,13 @@ mtc::Task MTCTaskNode::createTask()
       {
         auto stage_move_to_place = std::make_unique<mtc::stages::Connect>(
             "move to place",
-            mtc::stages::Connect::GroupPlannerVector{ { arm_group_name, sampling_planner },
-                                                      { hand_group_name, interpolation_planner } });
-        stage_move_to_place->setTimeout(5.0);
+            mtc::stages::Connect::GroupPlannerVector{{ arm_group_name, sampling_planner }});
+                                                    //  { hand_group_name, sampling_planner } });
+            stage_move_to_place->setTimeout(5.0);
         stage_move_to_place->properties().configureInitFrom(mtc::Stage::PARENT);
         task.add(std::move(stage_move_to_place));
       }
+
       {
         auto place = std::make_unique<mtc::SerialContainer>("place object");
         task.properties().exposeTo(place->properties(), { "eef", "group", "ik_frame" });
@@ -279,16 +322,21 @@ mtc::Task MTCTaskNode::createTask()
           stage->setObject("object");
         
           geometry_msgs::msg::PoseStamped target_pose_msg;
-          target_pose_msg.header.frame_id = "object";
-          target_pose_msg.pose.position.y = 0.5;
-          target_pose_msg.pose.orientation.w = 1.0;
+          target_pose_msg.header.frame_id = "base_link";
+          target_pose_msg.pose.position.x = 0.08;
+          target_pose_msg.pose.position.y = 0.35;
+          target_pose_msg.pose.position.z = 0.07;
+          target_pose_msg.pose.orientation.x = 1.0;
+          target_pose_msg.pose.orientation.y = 0.0;
+          target_pose_msg.pose.orientation.z = 0.0;
+          target_pose_msg.pose.orientation.w = 0.0;
           stage->setPose(target_pose_msg);
           stage->setMonitoredStage(attach_object_stage);  // Hook into attach_object_stage
         
           // Compute IK
           auto wrapper =
               std::make_unique<mtc::stages::ComputeIK>("place pose IK", std::move(stage));
-          wrapper->setMaxIKSolutions(2);
+          wrapper->setMaxIKSolutions(10);
           wrapper->setMinSolutionDistance(1.0);
           wrapper->setIKFrame("object");
           wrapper->properties().configureInitFrom(mtc::Stage::PARENT, { "eef", "group" });
@@ -330,7 +378,7 @@ mtc::Task MTCTaskNode::createTask()
           // Set retreat direction
           geometry_msgs::msg::Vector3Stamped vec;
           vec.header.frame_id = "world";
-          vec.vector.x = -0.5;
+          vec.vector.x = 1.0;
           stage->setDirection(vec);
           place->insert(std::move(stage));
         }
@@ -338,12 +386,22 @@ mtc::Task MTCTaskNode::createTask()
       }
 
       {
-        auto stage = std::make_unique<mtc::stages::MoveTo>("return home", interpolation_planner);
+        auto stage = std::make_unique<mtc::stages::MoveTo>("return to observation", interpolation_planner);
         stage->properties().configureInitFrom(mtc::Stage::PARENT, { "group" });
-        stage->setGoal("ready");
+        // Define the joint values for the target pose
+        std::map<std::string, double> joint_values = 
+        {
+          {"joint_1", 0.0},
+          {"joint_2", -0.8},
+          {"joint_3", -3.15},
+          {"joint_4", -2.0},
+          {"joint_5", 0.0},
+          {"joint_6", -1.20},
+          {"joint_7", 1.55}
+        };
+        stage->setGoal(joint_values);
         task.add(std::move(stage));
       }
-
   return task;
 }
 
