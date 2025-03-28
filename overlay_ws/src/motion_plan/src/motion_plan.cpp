@@ -145,6 +145,7 @@ mtc::Task MTCTaskNode::createTask()
   task.setProperty("group", arm_group_name);
   task.setProperty("eef", hand_group_name);
   task.setProperty("ik_frame", hand_frame);
+  task.setProperty("planner_id", "RRTstar");
 
 // Disable warnings for this line, as it's a variable that's set but not used in this example
 #pragma GCC diagnostic push
@@ -160,6 +161,7 @@ mtc::Task MTCTaskNode::createTask()
   const double max_acceleration_scaling_factor = 0.4;
 
   auto sampling_planner = std::make_shared<mtc::solvers::PipelinePlanner>(node_);
+  sampling_planner->setProperty("planner_id", "RRTstar"); 
   sampling_planner->setMaxVelocityScalingFactor(max_velocity_scaling_factor);
   sampling_planner->setMaxAccelerationScalingFactor(max_acceleration_scaling_factor);
 

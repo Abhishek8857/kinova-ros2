@@ -48,6 +48,12 @@ RUN apt-get update && apt-get install -y \
     ros-humble-kinematics-interface-kdl \
     ros-humble-test-msgs \
     libcap-dev \
+    libsm6 \
+    libxext6 \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    mesa-utils \
+    libqt5gui5 \
     ros-humble-kinova-gen3-7dof-robotiq-2f-85-moveit-config \
     ros-humble-kinova-gen3-6dof-robotiq-2f-85-moveit-config \
     && apt-get clean && rm -rf /var/lib/apt/lists/*

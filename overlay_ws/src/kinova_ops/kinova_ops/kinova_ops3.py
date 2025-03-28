@@ -60,6 +60,8 @@ class KinovaOps3(Node):
             }
 
             np.savez('/root/workspaces/kinova_ws/kinova-transfer/rgbd_image.npz', **combined_data)
+            # np.savez('/home/abhishek/workspaces/kinova_ws/src/kinova-transfer/rgbd_image.npz', **combined_data)
+            
             self.get_logger().info('Saved RGB-D image (4 channels).')
             self.task_execution_status = "0"
 

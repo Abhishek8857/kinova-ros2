@@ -23,6 +23,7 @@ class KinovaOps2(Node):
         self.tf_broadcaster = TransformBroadcaster(self)
         
         self.grasp_file_path = '/root/workspaces/kinova_ws/kinova-transfer/predictions_rgbd_image.npz'
+        # self.grasp_file_path = '/home/abhishek/workspaces/kinova_ws/src/kinova-transfer/predictions_rgbd_image.npz'
 
         # Timer to check for file disappearance
         self.timer = self.create_timer(1.0, self.process_grasp)
