@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>base_node_python</name>
+  <name>agent_talker</name>
   <version>0.0.0</version>
-  <description>This package contains a ros2 python base node </description>
-  <maintainer email="l.bergs@wzl-mq.rwth-aachen.de">Lukas Bergs</maintainer>
-  <license>TODO: License declaration</license>
+  <description>TODO: Package description</description>
+  <maintainer email="deshmukhabhi02@gmail.com">abhishek</maintainer>
+  <license>Apache-2.0</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

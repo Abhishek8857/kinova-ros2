@@ -6,6 +6,10 @@
 # include <std_msgs/msg/bool.hpp>
 # include <thread>
 # include <chrono>
+# include <yaml-cpp/yaml.h>
+# include <fstream>
+# include <iomanip>
+# include <filesystem>
 
 
 using std::placeholders::_1;
@@ -14,29 +18,18 @@ class AgentSubscriber : public rclcpp::Node
 {
   public:
     // Initialise the Node
-    AgentSubscriber () : Node ("agent_subscriber"),  stop_signal_recieved(false)
+    AgentSubscriber () : Node ("agent_subscriber")
     {
       // Subscribe to recieve Coordinates
       RCLCPP_INFO(this->get_logger(), "Agent subscriber node initialised. Waiting for coordinates...");
       subscription = this->create_subscription<std_msgs::msg::Float64MultiArray>(
         "published_coordinates", 10, std::bind(&AgentSubscriber::agent_callback, this, _1));
-
-      // Subscribe to the stop signal
-      stop_subscription = this->create_subscription<std_msgs::msg::Bool>("stop_robot", 10, std::bind(&AgentSubscriber::stop_callback, this, _1));
     }
 
   private:  
     void agent_callback(const std_msgs::msg::Float64MultiArray::SharedPtr msg) 
     {
       // DEBUG: Print out the recieved Coordinates
-      // Stop the Robot if stop signal is recieved
-      if (stop_signal_recieved)
-      {
-        RCLCPP_WARN(this->get_logger(), "Stop signal recieved. Halting the Robot");
-        stopMotion();
-        return;
-      }
-
       RCLCPP_INFO(this->get_logger(), "Recieved Cartesian Coordinates..");
       for (size_t i {0}; i < msg->data.size(); i++)
       {
@@ -70,7 +63,16 @@ class AgentSubscriber : public rclcpp::Node
         move_group_manipulator->setJointValueTarget(joint_values);
 
         // Verify if the motion was successful
-        bool success = (move_group_manipulator->move() == moveit::core::MoveItErrorCode::SUCCESS);
+        // bool success = (move_group_manipulator->move() == moveit::core::MoveItErrorCode::SUCCESS);
+        moveit::planning_interface::MoveGroupInterface::Plan plan;
+        bool success = (move_group_manipulator->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+
+        if (success)
+        {
+          move_group_manipulator->execute(plan);
+          std::string file_name = "trajectory_" + getTimestamp() + ".yaml";
+          saveTrajectoryToFile(plan.trajectory_, file_name); 
+        }
         succeed(success);
       }
       else if (msg->data[0] == 1.0)
@@ -92,7 +94,15 @@ class AgentSubscriber : public rclcpp::Node
         move_group_manipulator->setPoseTarget(target_pose);
 
         // Verify if the motion was successful
-        bool success = (move_group_manipulator->move() == moveit::core::MoveItErrorCode::SUCCESS);
+        moveit::planning_interface::MoveGroupInterface::Plan plan;
+
+        bool success = (move_group_manipulator->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+        if (success)
+        {
+          move_group_manipulator->execute(plan);     
+          std::string file_name = "trajectory_" + getTimestamp() + ".yaml";
+          saveTrajectoryToFile(plan.trajectory_, file_name);    
+        }
         succeed(success);
       }
       else if (msg->data[0] == 2.0)
@@ -109,7 +119,17 @@ class AgentSubscriber : public rclcpp::Node
         move_group_gripper->setJointValueTarget(gripper_values);
 
         // Verify if the motion was successful
-        bool success = (move_group_gripper->move() == moveit::core::MoveItErrorCode::SUCCESS);
+        // bool success = (move_group_gripper->move() == moveit::core::MoveItErrorCode::SUCCESS);
+        moveit::planning_interface::MoveGroupInterface::Plan plan;
+
+        bool success = (move_group_gripper->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+        if (success)
+        {
+          move_group_gripper->execute(plan);
+          std::string file_name = "trajectory_" + getTimestamp() + ".yaml";
+          saveTrajectoryToFile(plan.trajectory_, file_name);
+        }
+
         succeed(success);
       }
       else
@@ -119,12 +139,6 @@ class AgentSubscriber : public rclcpp::Node
       }
     }
 
-    void stop_callback(const std_msgs::msg::Bool::SharedPtr msg)
-    {
-      stop_signal_recieved = msg->data;
-      RCLCPP_INFO(this->get_logger(), "Stop signal state: %s", stop_signal_recieved ? "True" : "False");
-
-    }
 
     void succeed (bool status)
     {
@@ -138,53 +152,76 @@ class AgentSubscriber : public rclcpp::Node
       }
     }
   
-  void stopMotion()
-  {
-    if (move_group_manipulator)
-      move_group_manipulator->stop();
-    if (move_group_gripper)
-      move_group_gripper->stop();
-    stop_signal_recieved = false;
-    return;
-  }
-
-
-  void executeWithStopCheck(std::unique_ptr<moveit::planning_interface::MoveGroupInterface> &move_group)
-  {
-    moveit::planning_interface::MoveGroupInterface::Plan plan;
-    if (move_group->plan(plan) != moveit::core::MoveItErrorCode::SUCCESS)
+  std::string getTimestamp()
     {
-        RCLCPP_ERROR(this->get_logger(), "Planning failed. Aborting execution.");
-        return;
+      auto now = std::chrono::system_clock::now();
+      auto now_c = std::chrono::system_clock::to_time_t(now);
+      std::stringstream ss;
+      ss << std::put_time(std::localtime(&now_c), "%Y%m%d_%H%M%S");
+      return ss.str();
     }
 
-    auto execution_thread = std::thread([&move_group, &plan]() {
-        move_group->asyncExecute(plan);
-    });
-
-    // Monitor execution and check for stop signal
-    while (rclcpp::ok())
+    void saveTrajectoryToFile(const moveit_msgs::msg::RobotTrajectory& traj, const std::string& filename)
     {
-        if (stop_signal_recieved)
+      std::string folder_path = "/kinova-ros2/trajectories/";
+      static bool first_call = true;
+      std::filesystem::path dir(folder_path);
+      
+      // Create Directory if it is not present
+      if (first_call)
+      {
+        if(std::filesystem::exists(dir))
         {
-            RCLCPP_WARN(this->get_logger(), "Stop signal detected during execution. Halting.");
-            move_group->stop();
-            break;
+          for (const auto& entry : std::filesystem::directory_iterator(dir))
+          {
+            std::error_code ec;
+            std::filesystem::remove_all(entry.path(), ec);
+            if (ec)
+            {
+              RCLCPP_WARN(this->get_logger(), "Could not delete %s: %s",
+                          entry.path().c_str(), ec.message().c_str());
+            }
+          }
+          RCLCPP_INFO(this->get_logger(), "Cleared contents of folder: %s", folder_path.c_str());
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(50)); // Check at 20 Hz
+        else
+        {
+          std::filesystem::create_directories(dir);
+          RCLCPP_INFO(this->get_logger(), "Created directory: %s", folder_path.c_str());
+        }
+        first_call = false;
+      }
+     
+
+      YAML::Emitter out;
+      out << YAML::BeginMap;
+      out << YAML::Key << "joint_names" << YAML::Value << traj.joint_trajectory.joint_names;
+      out << YAML::Key << "points" << YAML::Value << YAML::BeginSeq;
+
+      for (const auto& pt : traj.joint_trajectory.points)
+      {
+        out << YAML::BeginMap;
+        out << YAML::Key << "positions" << YAML::Value << YAML::Flow << pt.positions;
+        out << YAML::Key << "velocities" << YAML::Value << YAML::Flow << pt.velocities;
+        out << YAML::Key << "accelerations" << YAML::Value << YAML::Flow << pt.accelerations;
+        out << YAML::Key << "time_from_start" << YAML::Value << (pt.time_from_start.sec + pt.time_from_start.nanosec / 1e9);
+        out << YAML::EndMap;
+      }
+
+      out << YAML::EndSeq;
+      out << YAML::EndMap;
+
+      std::ofstream fout(folder_path + "/" + filename);
+      fout << out.c_str();
+      RCLCPP_INFO(this->get_logger(), "Trajectory saved to %s", filename.c_str());
     }
 
-    if (execution_thread.joinable())
-    {
-        execution_thread.join();
-    }
-  }
-
+  
   rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr subscription;
-  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr stop_subscription;
+  
   std::unique_ptr<moveit::planning_interface::MoveGroupInterface> move_group_manipulator; // Lazy-initialized
   std::unique_ptr<moveit::planning_interface::MoveGroupInterface> move_group_gripper; // Lazy-initialized
-  bool stop_signal_recieved;
+ 
 };
 
 int main (int argc, char *argv []) 
@@ -195,3 +232,4 @@ int main (int argc, char *argv [])
   rclcpp::shutdown();
   return 0;
 }
+

@@ -95,22 +95,6 @@ def launch_setup(context, *args, **kwargs):
         arguments=["--frame-id", "world", "--child-frame-id", "base_link"],
     )
 
-    # static_tf_camera = Node(
-    #     package="tf2_ros",
-    #     executable="static_transform_publisher",
-    #     name="static_transform_publisher_camera",
-    #     output="log",
-    #     arguments=["0.2", "0", "1.5", "0", "0", "0", "base_link", "camera_link"],
-    # )
-
-    # static_tf_camera = Node(
-    #     package="tf2_ros",
-    #     executable="static_transform_publisher",
-    #     name="static_transform_publisher_camera",
-    #     output="log",
-    #     arguments=["0.00987", "-0.02", "0", "-1.5708", "0", "-1.5708", "gen3_bracelet_link", "wrist_mounted_camera_color_optical_frame"]
-    # )
-
     # Publish TF
     robot_state_publisher = Node(
         package="robot_state_publisher",
