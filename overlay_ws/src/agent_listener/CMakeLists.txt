@@ -9,12 +9,13 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 add_executable(agent_listener src/agent_listener.cpp)
 add_executable(trajectory_player src/trajectory_player.cpp)
-
+add_executable(trajectory_recorder src/trajectory_recorder.cpp)
 
 
 ament_target_dependencies(
@@ -22,13 +23,17 @@ ament_target_dependencies(
   "moveit_ros_planning_interface"
   "rclcpp"
   "std_msgs"
+  "sensor_msgs"
   "geometry_msgs"
 )
 
-ament_target_dependencies (trajectory_player "rclcpp" "moveit_ros_planning_interface")
+ament_target_dependencies (trajectory_player rclcpp moveit_ros_planning_interface control_msgs)
+ament_target_dependencies(trajectory_recorder rclcpp sensor_msgs yaml-cpp moveit_ros_planning_interface)
 
 target_link_libraries(agent_listener yaml-cpp)
 target_link_libraries(trajectory_player yaml-cpp)
+target_link_libraries(trajectory_recorder yaml-cpp)
+
 
 
 target_include_directories(agent_listener PUBLIC
@@ -41,7 +46,12 @@ target_include_directories(trajectory_player PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_compile_features(trajectory_player PUBLIC c_std_99 cxx_std_17)
 
-install(TARGETS agent_listener trajectory_player
+target_include_directories(trajectory_recorder PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(trajectory_recorder PUBLIC c_std_99 cxx_std_17)  
+
+install(TARGETS agent_listener trajectory_player trajectory_recorder  
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

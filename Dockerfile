@@ -47,15 +47,7 @@ RUN apt-get update && apt-get install -y \
     libgflags-dev \
     ros-humble-kinematics-interface-kdl \
     ros-humble-test-msgs \
-    libcap-dev \
-    libsm6 \
-    libxext6 \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    mesa-utils \
-    libqt5gui5 \
     ros-humble-kinova-gen3-7dof-robotiq-2f-85-moveit-config \
-    ros-humble-kinova-gen3-6dof-robotiq-2f-85-moveit-config \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
           
     
@@ -93,18 +85,20 @@ RUN rosdep install --from-paths . src --ignore-src -r -y
 
 # Build the workspace with resource management
 RUN source /opt/ros/humble/setup.bash && \
-    MAKEFLAGS="-j4 -l2" colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --parallel-workers 3 --symlink-install --executor sequential
+    MAKEFLAGS="-j4 -l3" colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --parallel-workers 3 --symlink-install
 
 
 RUN apt-get update && apt-get upgrade -y
 
 # Copy cyclonedds config files
-# COPY cyclonedds/config.xml /config.xml
-# COPY cyclonedds/10-cyclone-max.conf /etc/sysctl.d/10-cyclone-max.conf
+COPY cyclonedds/config.xml /config.xml
+COPY cyclonedds/10-cyclone-max.conf /etc/sysctl.d/10-cyclone-max.conf
 
 # Copy entrypoint scripts and make them executable
 COPY entrypoint_scripts/ /entrypoint_scripts/
 RUN chmod +x /entrypoint_scripts/*.sh
+
+RUN apt-get install ros-humble-control-msgs -y
 
 # Copy contents in overlay ws
 COPY overlay_ws/ /overlay_ws/

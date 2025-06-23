@@ -70,8 +70,6 @@ class AgentSubscriber : public rclcpp::Node
         if (success)
         {
           move_group_manipulator->execute(plan);
-          std::string file_name = "trajectory_" + getTimestamp() + ".yaml";
-          saveTrajectoryToFile(plan.trajectory_, file_name); 
         }
         succeed(success);
       }
@@ -100,8 +98,6 @@ class AgentSubscriber : public rclcpp::Node
         if (success)
         {
           move_group_manipulator->execute(plan);     
-          std::string file_name = "trajectory_" + getTimestamp() + ".yaml";
-          saveTrajectoryToFile(plan.trajectory_, file_name);    
         }
         succeed(success);
       }
@@ -126,8 +122,6 @@ class AgentSubscriber : public rclcpp::Node
         if (success)
         {
           move_group_gripper->execute(plan);
-          std::string file_name = "trajectory_" + getTimestamp() + ".yaml";
-          saveTrajectoryToFile(plan.trajectory_, file_name);
         }
 
         succeed(success);
@@ -152,70 +146,6 @@ class AgentSubscriber : public rclcpp::Node
       }
     }
   
-  std::string getTimestamp()
-    {
-      auto now = std::chrono::system_clock::now();
-      auto now_c = std::chrono::system_clock::to_time_t(now);
-      std::stringstream ss;
-      ss << std::put_time(std::localtime(&now_c), "%Y%m%d_%H%M%S");
-      return ss.str();
-    }
-
-    void saveTrajectoryToFile(const moveit_msgs::msg::RobotTrajectory& traj, const std::string& filename)
-    {
-      std::string folder_path = "/kinova-ros2/trajectories/";
-      static bool first_call = true;
-      std::filesystem::path dir(folder_path);
-      
-      // Create Directory if it is not present
-      if (first_call)
-      {
-        if(std::filesystem::exists(dir))
-        {
-          for (const auto& entry : std::filesystem::directory_iterator(dir))
-          {
-            std::error_code ec;
-            std::filesystem::remove_all(entry.path(), ec);
-            if (ec)
-            {
-              RCLCPP_WARN(this->get_logger(), "Could not delete %s: %s",
-                          entry.path().c_str(), ec.message().c_str());
-            }
-          }
-          RCLCPP_INFO(this->get_logger(), "Cleared contents of folder: %s", folder_path.c_str());
-        }
-        else
-        {
-          std::filesystem::create_directories(dir);
-          RCLCPP_INFO(this->get_logger(), "Created directory: %s", folder_path.c_str());
-        }
-        first_call = false;
-      }
-     
-
-      YAML::Emitter out;
-      out << YAML::BeginMap;
-      out << YAML::Key << "joint_names" << YAML::Value << traj.joint_trajectory.joint_names;
-      out << YAML::Key << "points" << YAML::Value << YAML::BeginSeq;
-
-      for (const auto& pt : traj.joint_trajectory.points)
-      {
-        out << YAML::BeginMap;
-        out << YAML::Key << "positions" << YAML::Value << YAML::Flow << pt.positions;
-        out << YAML::Key << "velocities" << YAML::Value << YAML::Flow << pt.velocities;
-        out << YAML::Key << "accelerations" << YAML::Value << YAML::Flow << pt.accelerations;
-        out << YAML::Key << "time_from_start" << YAML::Value << (pt.time_from_start.sec + pt.time_from_start.nanosec / 1e9);
-        out << YAML::EndMap;
-      }
-
-      out << YAML::EndSeq;
-      out << YAML::EndMap;
-
-      std::ofstream fout(folder_path + "/" + filename);
-      fout << out.c_str();
-      RCLCPP_INFO(this->get_logger(), "Trajectory saved to %s", filename.c_str());
-    }
-
   
   rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr subscription;
   
@@ -232,4 +162,3 @@ int main (int argc, char *argv [])
   rclcpp::shutdown();
   return 0;
 }
-

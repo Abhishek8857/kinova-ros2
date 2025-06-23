@@ -13,44 +13,78 @@
 
 namespace fs = std::filesystem;
 
-
-moveit_msgs::msg::RobotTrajectory loadTrajectoryFromFile (const std::string& filepath)
+moveit_msgs::msg::RobotTrajectory loadTrajectoryFromFile(const std::string &filepath)
 {
     YAML::Node root = YAML::LoadFile(filepath);
 
     moveit_msgs::msg::RobotTrajectory trajectory_msg;
-    auto jt_node = root["joint_trajectory"];
-    auto joint_names = jt_node["joint_names"];
 
-    for (const auto& name: joint_names)
-    {
+    auto joint_names_node = root["joint_order"];
+    auto points_node = root["points"];
+
+    for (const auto &name : joint_names_node)
         trajectory_msg.joint_trajectory.joint_names.push_back(name.as<std::string>());
-    }
 
-    for (const auto& pt: jt_node["points"])
+    double t0 = points_node[0]["time_from_start"].as<double>();
+
+    for (const auto &pt : points_node)
     {
         trajectory_msgs::msg::JointTrajectoryPoint point;
-        for (const auto& val: pt["positions"])
-        {
+
+        for (const auto &val : pt["positions"])
             point.positions.push_back(val.as<double>());
-        }
-        for (const auto& val: pt["velocities"])
+
+        if (pt["velocities"])
         {
-            point.velocities.push_back(val.as<double>());
+            for (const auto &val : pt["velocities"])
+                point.velocities.push_back(val.as<double>());
         }
-        for (const auto& val: pt["accelerations"])
+
+        // fallback if velocities are empty
+        if (point.velocities.empty())
+            point.velocities.resize(point.positions.size(), 0.0);
+
+        if (pt["time_from_start"])
         {
-            point.accelerations.push_back(val.as<double>());
+            double rel_time = pt["time_from_start"].as<double>() - t0;
+            point.time_from_start = rclcpp::Duration::from_seconds(rel_time);
         }
-        for (const auto& val: pt["effort"])
-        {
-            point.effort.push_back(val.as<double>());
-        }
-        point.time_from_start = rclcpp::Duration::from_seconds(pt["time_from_start"].as<double>());
+
         trajectory_msg.joint_trajectory.points.push_back(point);
     }
+
     return trajectory_msg;
 }
+
+
+void printTrajectory(const moveit_msgs::msg::RobotTrajectory& traj)
+{
+    const auto& jt = traj.joint_trajectory;
+    RCLCPP_INFO(rclcpp::get_logger("trajectory_printer"), "Joint names:");
+    for (const auto& name : jt.joint_names)
+        RCLCPP_INFO(rclcpp::get_logger("trajectory_printer"), "  %s", name.c_str());
+
+    RCLCPP_INFO(rclcpp::get_logger("trajectory_printer"), "Trajectory points: %zu", jt.points.size());
+    for (size_t i = 0; i < jt.points.size(); ++i)
+    {
+        const auto& pt = jt.points[i];
+        std::ostringstream pos, vel;
+        for (size_t j = 0; j < pt.positions.size(); ++j)
+        {
+            pos << pt.positions[j] << (j < pt.positions.size() - 1 ? ", " : "");
+        }
+        for (size_t j = 0; j < pt.velocities.size(); ++j)
+        {
+            vel << pt.velocities[j] << (j < pt.velocities.size() - 1 ? ", " : "");
+        }
+
+        RCLCPP_INFO(rclcpp::get_logger("trajectory_printer"),
+                    "Point %zu:\n  positions: [%s]\n  velocities: [%s]\n  time_from_start: %.3f",
+                    i, pos.str().c_str(), vel.str().c_str(), rclcpp::Duration(pt.time_from_start).seconds()
+);
+    }
+}
+
 
 class TrajectoryReplayAllNode : public rclcpp::Node
 {
@@ -100,6 +134,7 @@ public:
             try
             {
                 auto trajectory = loadTrajectoryFromFile(filepath);
+                printTrajectory(trajectory);
                 moveit::planning_interface::MoveGroupInterface::Plan plan;
                 plan.trajectory_ = trajectory;
 

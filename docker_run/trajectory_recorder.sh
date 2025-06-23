@@ -16,13 +16,15 @@ docker run \
 		--privileged \
         --gpus all \
         --runtime=nvidia \
+        --user $(id -u):$(id -g) \
 		-v /dev:/dev \
 		-v $HOME/.ros/log:/.ros/log \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		--env RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION} \
 		--env DISPLAY=$DISPLAY \
-        --name test \
+        --name trajectory_recorder \
         -v "$REPO_DIR:/kinova-ros2:rw" \
         -v $PARENT_DIR:/root/workspaces/kinova_ws/src/:rw \
-        -w /overlay_ws \
+        -w /kinova-ros2 \
         ros2-kortex-vision-moveit:latest \
+        /kinova-ros2/entrypoint_scripts/entrypoint_trajectory_recorder.sh

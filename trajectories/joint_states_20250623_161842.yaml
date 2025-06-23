@@ -1,0 +1,14 @@
+joint_order:
+  - joint_1
+  - joint_2
+  - joint_3
+  - joint_4
+  - joint_5
+  - joint_6
+  - joint_7
+  - robotiq_85_left_knuckle_joint
+  - robotiq_85_right_knuckle_joint
+points:
+  - positions: [0, 0, 0, 0, 0, 0, 0, 0.79290000000000005, -0.79290000000000005]
+    velocities: [0, 0, 0, 0, 0, 0, 0, 0, -0]
+    time_from_start: 1750695512.5648677
