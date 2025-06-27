@@ -68,9 +68,9 @@ def launch_setup(context, *args, **kwargs):
 
     moveit_config.moveit_cpp.update({"use_sim_time": use_sim_time.perform(context) == "true"})
     
-    octomap_config = {'octomap_frame': 'camera_rgb_optical_frame', 
-                      'octomap_resolution': 0.01,
-                      'max_range': 5.0}
+    # octomap_config = {'octomap_frame': 'camera_rgb_optical_frame', 
+    #                   'octomap_resolution': 0.01,
+    #                   'max_range': 5.0}
     
     # Load  ExecuteTaskSolutionCapability so we can execute found solutions in simulation
     move_group_capabilities = {"capabilities": "move_group/ExecuteTaskSolutionCapability"}

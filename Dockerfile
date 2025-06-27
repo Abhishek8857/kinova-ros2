@@ -85,7 +85,7 @@ RUN rosdep install --from-paths . src --ignore-src -r -y
 
 # Build the workspace with resource management
 RUN source /opt/ros/humble/setup.bash && \
-    MAKEFLAGS="-j4 -l3" colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --parallel-workers 3 --symlink-install
+ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --symlink-install
 
 
 RUN apt-get update && apt-get upgrade -y
@@ -97,8 +97,6 @@ COPY cyclonedds/10-cyclone-max.conf /etc/sysctl.d/10-cyclone-max.conf
 # Copy entrypoint scripts and make them executable
 COPY entrypoint_scripts/ /entrypoint_scripts/
 RUN chmod +x /entrypoint_scripts/*.sh
-
-RUN apt-get install ros-humble-control-msgs -y
 
 # Copy contents in overlay ws
 COPY overlay_ws/ /overlay_ws/
