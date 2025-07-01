@@ -206,11 +206,11 @@ mtc::Task MTCTaskNode::createTask()
   std::map<std::string, double> joint_values = {
       {"joint_1", 0.0},
       {"joint_2", -0.7650},
-      {"joint_3", -3.15353},
-      {"joint_4", -2.1302},
-      {"joint_5", 0.00588},
-      {"joint_6", -1.2077},
-      {"joint_7", 1.55037}
+      {"joint_3", -3.15},
+      {"joint_4", -2.13},
+      {"joint_5", 0.006},
+      {"joint_6", -1.2},
+      {"joint_7", 1.55}
   };
   stage->setGoal(joint_values);
   task.add(std::move(stage));
@@ -447,11 +447,11 @@ mtc::Task MTCTaskNode::createTask()
     {
       {"joint_1", 0.0},
       {"joint_2", -0.7650},
-      {"joint_3", -3.15353},
-      {"joint_4", -2.1302},
-      {"joint_5", 0.00588},
-      {"joint_6", -1.2077},
-      {"joint_7", 1.55037}
+      {"joint_3", -3.15},
+      {"joint_4", -2.13},
+      {"joint_5", 0.006},
+      {"joint_6", -1.2},
+      {"joint_7", 1.55}
     };
 
     stage->setGoal(joint_values);
