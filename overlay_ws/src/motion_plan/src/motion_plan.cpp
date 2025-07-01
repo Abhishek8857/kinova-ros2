@@ -179,7 +179,7 @@ mtc::Task MTCTaskNode::createTask()
   // Define the joint values for the target pose
   std::map<std::string, double> joint_values = {
       {"joint_1", 0.0},
-      {"joint_2", -0.8},
+      {"joint_2", -0.7650},
       {"joint_3", -3.15},
       {"joint_4", -2.0},
       {"joint_5", 0.0},

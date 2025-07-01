@@ -59,7 +59,7 @@ class TrajectoryRecorder : public rclcpp::Node
                 "/joint_states", 10, std::bind(&TrajectoryRecorder::joint_state_callback, this, _1));
 
             timer = this->create_wall_timer(
-                std::chrono::seconds(10), 
+                std::chrono::seconds(20), 
                 std::bind(&TrajectoryRecorder::saveToFile, this));
         }
 
@@ -68,26 +68,27 @@ class TrajectoryRecorder : public rclcpp::Node
         rclcpp::TimerBase::SharedPtr timer;
         std::vector<sensor_msgs::msg::JointState> recorded_states_;
         std::string output_dir;
-
+        rclcpp::Time last_change_time;
         sensor_msgs::msg::JointState last_saved_state;
         bool first_sample = true;
         double position_threshold = 0.001;
 
         const std::vector<std::string> joint_order = {
                 "joint_1",
+                "robotiq_85_left_knuckle_joint",
                 "joint_2",
-                "joint_3",
                 "joint_4",
-                "joint_5",
+                "joint_5",  
+                "joint_3",
                 "joint_6",
                 "joint_7",
-                "robotiq_85_left_knuckle_joint",
-                "robotiq_85_right_knuckle_joint"
             };
 
 
         void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg)
         {
+            last_change_time = this->now();
+            
             if (first_sample)
             {
                 recorded_states_.push_back(*msg);
