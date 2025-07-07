@@ -10,6 +10,7 @@
 # include <filesystem>
 # include <algorithm>
 # include <vector>
+# include <thread>
 
 namespace fs = std::filesystem;
 
@@ -56,6 +57,85 @@ moveit_msgs::msg::RobotTrajectory loadTrajectoryFromFile(const std::string &file
     return trajectory_msg;
 }
 
+void splitTrajectoryByGroup(
+    const moveit_msgs::msg::RobotTrajectory& full_trajectory,
+    const std::vector<std::string>& manipulator_joints,
+    const std::vector<std::string>& gripper_joints,
+    moveit_msgs::msg::RobotTrajectory& manipulator_trajectory,
+    moveit_msgs::msg::RobotTrajectory& gripper_trajectory)
+{
+    const auto& jt = full_trajectory.joint_trajectory;
+
+    std::map<std::string, size_t> name_to_index;
+    for (size_t i = 0; i < jt.joint_names.size(); ++i)
+        name_to_index[jt.joint_names[i]] = i;
+
+    // Set joint names
+    manipulator_trajectory.joint_trajectory.joint_names = manipulator_joints;
+    gripper_trajectory.joint_trajectory.joint_names = gripper_joints;
+
+    for (const auto& pt : jt.points)
+    {
+        trajectory_msgs::msg::JointTrajectoryPoint mpt, gpt;
+        mpt.time_from_start = pt.time_from_start;
+        gpt.time_from_start = pt.time_from_start;
+
+        for (const auto& name : manipulator_joints)
+        {
+            size_t idx = name_to_index[name];
+            mpt.positions.push_back(pt.positions[idx]);
+            if (!pt.velocities.empty()) mpt.velocities.push_back(pt.velocities[idx]);
+        }
+
+        for (const auto& name : gripper_joints)
+        {
+            size_t idx = name_to_index[name];
+            gpt.positions.push_back(pt.positions[idx]);
+            if (!pt.velocities.empty()) gpt.velocities.push_back(pt.velocities[idx]);
+        }
+
+        manipulator_trajectory.joint_trajectory.points.push_back(mpt);
+        gripper_trajectory.joint_trajectory.points.push_back(gpt);
+    }
+}
+
+void saveTrajectoryToFile(const moveit_msgs::msg::RobotTrajectory& traj, const std::string& filepath)
+{
+
+    // Remove the file if it already exists
+    if (fs::exists(filepath))
+    {
+        fs::remove(filepath);
+    }
+
+    YAML::Node root;
+    const auto& jt = traj.joint_trajectory;
+
+    root["joint_order"] = YAML::Node(YAML::NodeType::Sequence);
+    for (const auto& name : jt.joint_names)
+        root["joint_order"].push_back(name);
+
+    root["points"] = YAML::Node(YAML::NodeType::Sequence);
+    for (const auto& pt : jt.points)
+    {
+        YAML::Node point;
+        point["positions"] = YAML::Node(YAML::NodeType::Sequence);
+        for (double p : pt.positions)
+            point["positions"].push_back(p);
+
+        point["velocities"] = YAML::Node(YAML::NodeType::Sequence);
+        for (double v : pt.velocities)
+            point["velocities"].push_back(v);
+
+        point["time_from_start"] = rclcpp::Duration(pt.time_from_start).seconds();
+        root["points"].push_back(point);
+    }
+
+    std::ofstream fout(filepath);
+    fout << root;
+    fout.close();
+}
+
 
 void printTrajectory(const moveit_msgs::msg::RobotTrajectory& traj)
 {
@@ -97,14 +177,16 @@ public:
 
     void run()
     {
-        move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "manipulator");
+        manipulator_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "manipulator");
+        gripper_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "gripper");
 
         const std::string folder_path = "/kinova-ros2/trajectories/";
         std::vector<fs::directory_entry> yaml_files;
 
-        for (const auto& entry : fs::directory_iterator(folder_path))
+        if (entry.path().extension() == ".yaml")
         {
-            if (entry.path().extension() == ".yaml")
+            std::string filename = entry.path().filename().string();
+            if (filename.find("debug_") == std::string::npos)  // Skip debug YAMLs
             {
                 yaml_files.push_back(entry);
             }
@@ -127,23 +209,74 @@ public:
         RCLCPP_INFO(this->get_logger(), "Found %zu trajectory files. Starting replay...", yaml_files.size());
 
         for (const auto& file : yaml_files)
+        // {
+        //     std::string filepath = file.path().string();
+        //     RCLCPP_INFO(this->get_logger(), "Loading %s", filepath.c_str());
+
+        //     try
+        //     {
+        //         auto trajectory = loadTrajectoryFromFile(filepath);
+        //         printTrajectory(trajectory);
+        //         moveit::planning_interface::MoveGroupInterface::Plan plan;
+        //         plan.trajectory_ = trajectory;
+
+        //         RCLCPP_INFO(this->get_logger(), "Executing...");
+        //         bool success = (manipulator_group_->execute(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+        //         if (!success)
+        //         {
+        //             RCLCPP_ERROR(this->get_logger(), "Execution failed for: %s", filepath.c_str());
+        //         }
+        //         rclcpp::sleep_for(std::chrono::seconds(1));
+        //     }
+        //     catch (const std::exception &e)
+        //     {
+        //         RCLCPP_ERROR(this->get_logger(), "Error loading/executing file %s: %s", filepath.c_str(), e.what());
+        //     }
+        // }
         {
             std::string filepath = file.path().string();
             RCLCPP_INFO(this->get_logger(), "Loading %s", filepath.c_str());
 
             try
             {
-                auto trajectory = loadTrajectoryFromFile(filepath);
-                printTrajectory(trajectory);
-                moveit::planning_interface::MoveGroupInterface::Plan plan;
-                plan.trajectory_ = trajectory;
+                auto full_trajectory = loadTrajectoryFromFile(filepath);
+                // printTrajectory(full_trajectory);
 
-                RCLCPP_INFO(this->get_logger(), "Executing...");
-                bool success = (move_group_->execute(plan) == moveit::core::MoveItErrorCode::SUCCESS);
-                if (!success)
+                moveit_msgs::msg::RobotTrajectory manip_traj, grip_traj;
+                splitTrajectoryByGroup(
+                    full_trajectory,
+                    {"joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6", "joint_7"},
+                    {"robotiq_85_left_knuckle_joint"},
+                    manip_traj,
+                    grip_traj);
+
+                // Save to YAML
+                saveTrajectoryToFile(manip_traj, "/kinova-ros2/trajectories/debug_manip.yaml");
+                saveTrajectoryToFile(grip_traj, "/kinova-ros2/trajectories/debug_gripper.yaml");
+
+                moveit::planning_interface::MoveGroupInterface::Plan manip_plan, grip_plan;
+                manip_plan.trajectory_ = manip_traj;
+                grip_plan.trajectory_ = grip_traj;
+                bool manip_success = false, grip_success = false;
+
+                std::thread manip_thread([&]() {
+                    RCLCPP_INFO(this->get_logger(), "Executing manipulator...");
+                    manip_success = (manipulator_group_->execute(manip_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+                });
+
+                std::thread gripper_thread([&]() {
+                    RCLCPP_INFO(this->get_logger(), "Executing gripper...");
+                    grip_success = (gripper_group_->execute(grip_plan) == moveit::core::MoveItErrorCode::SUCCESS);
+                });
+
+                manip_thread.join();
+                gripper_thread.join();
+
+                if (!manip_success || !grip_success)
                 {
                     RCLCPP_ERROR(this->get_logger(), "Execution failed for: %s", filepath.c_str());
                 }
+
                 rclcpp::sleep_for(std::chrono::seconds(1));
             }
             catch (const std::exception &e)
@@ -152,11 +285,13 @@ public:
             }
         }
 
+
         RCLCPP_INFO(this->get_logger(), "Finished executing all saved trajectories");
     }
 
 private:
-    std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_;
+    std::shared_ptr<moveit::planning_interface::MoveGroupInterface> manipulator_group_;
+    std::shared_ptr<moveit::planning_interface::MoveGroupInterface> gripper_group_;
 };
 
 

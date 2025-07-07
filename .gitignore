@@ -1,2 +1,5 @@
 # Ignore VS Code settings
 .vscode/
+
+# Ignore trajectories recorded
+trajectories/*
