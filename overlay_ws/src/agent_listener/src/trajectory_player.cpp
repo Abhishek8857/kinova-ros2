@@ -1,9 +1,10 @@
 # include <rclcpp/rclcpp.hpp>
 # include <moveit/move_group_interface/move_group_interface.h>
-# include <moveit/planning_interface/planning_interface.h>
-# include <moveit_msgs/msg/robot_trajectory.hpp>
 # include <trajectory_msgs/msg/joint_trajectory_point.hpp>
-
+# include <moveit/planning_interface/planning_interface.h>
+#include <control_msgs/action/gripper_command.hpp>
+# include <moveit_msgs/msg/robot_trajectory.hpp>
+#include <rclcpp_action/rclcpp_action.hpp>
 # include <yaml-cpp/yaml.h>
 # include <fstream>
 # include <string>
@@ -169,10 +170,18 @@ void printTrajectory(const moveit_msgs::msg::RobotTrajectory& traj)
 class TrajectoryReplayAllNode : public rclcpp::Node
 {
 public:
+    using GripperCommand = control_msgs::action::GripperCommand;
+    using GoalHandleGripperCommand = rclcpp_action::ClientGoalHandle<GripperCommand>;
+
     TrajectoryReplayAllNode()
         : Node("trajectory_replay_all_node")
     {
-        // Constructor only sets up the node
+        gripper_action_client_ = rclcpp_action::create_client<GripperCommand>(
+            this, "/robotiq_gripper_controller/gripper_cmd");
+
+        if (!gripper_action_client_->wait_for_action_server(std::chrono::seconds(5))) {
+            RCLCPP_ERROR(this->get_logger(), "Gripper action server not available.");
+        }
     }
 
     void run()
@@ -183,12 +192,15 @@ public:
         const std::string folder_path = "/kinova-ros2/trajectories/";
         std::vector<fs::directory_entry> yaml_files;
 
-        if (entry.path().extension() == ".yaml")
+        for (const auto& entry : fs::directory_iterator(folder_path))
         {
-            std::string filename = entry.path().filename().string();
-            if (filename.find("debug_") == std::string::npos)  // Skip debug YAMLs
+            if (entry.path().extension() == ".yaml")
             {
-                yaml_files.push_back(entry);
+                std::string filename = entry.path().filename().string();
+                if (filename.find("debug_") == std::string::npos)  // Skip debug YAMLs
+                {
+                    yaml_files.push_back(entry);
+                }
             }
         }
 
@@ -209,30 +221,6 @@ public:
         RCLCPP_INFO(this->get_logger(), "Found %zu trajectory files. Starting replay...", yaml_files.size());
 
         for (const auto& file : yaml_files)
-        // {
-        //     std::string filepath = file.path().string();
-        //     RCLCPP_INFO(this->get_logger(), "Loading %s", filepath.c_str());
-
-        //     try
-        //     {
-        //         auto trajectory = loadTrajectoryFromFile(filepath);
-        //         printTrajectory(trajectory);
-        //         moveit::planning_interface::MoveGroupInterface::Plan plan;
-        //         plan.trajectory_ = trajectory;
-
-        //         RCLCPP_INFO(this->get_logger(), "Executing...");
-        //         bool success = (manipulator_group_->execute(plan) == moveit::core::MoveItErrorCode::SUCCESS);
-        //         if (!success)
-        //         {
-        //             RCLCPP_ERROR(this->get_logger(), "Execution failed for: %s", filepath.c_str());
-        //         }
-        //         rclcpp::sleep_for(std::chrono::seconds(1));
-        //     }
-        //     catch (const std::exception &e)
-        //     {
-        //         RCLCPP_ERROR(this->get_logger(), "Error loading/executing file %s: %s", filepath.c_str(), e.what());
-        //     }
-        // }
         {
             std::string filepath = file.path().string();
             RCLCPP_INFO(this->get_logger(), "Loading %s", filepath.c_str());
@@ -257,7 +245,7 @@ public:
                 moveit::planning_interface::MoveGroupInterface::Plan manip_plan, grip_plan;
                 manip_plan.trajectory_ = manip_traj;
                 grip_plan.trajectory_ = grip_traj;
-                bool manip_success = false, grip_success = false;
+                bool manip_success = false, gripper_success = false;
 
                 std::thread manip_thread([&]() {
                     RCLCPP_INFO(this->get_logger(), "Executing manipulator...");
@@ -265,14 +253,85 @@ public:
                 });
 
                 std::thread gripper_thread([&]() {
-                    RCLCPP_INFO(this->get_logger(), "Executing gripper...");
-                    grip_success = (gripper_group_->execute(grip_plan) == moveit::core::MoveItErrorCode::SUCCESS);
-                });
+                    if (!gripper_action_client_->wait_for_action_server(std::chrono::seconds(5))) {
+                        RCLCPP_ERROR(this->get_logger(), "Gripper action server not available.");
+                        gripper_success = false;
+                        return;
+                    }
 
+                    double gripper_pos = 0.0;
+                    if (!grip_traj.joint_trajectory.points.empty()) {
+                        gripper_pos = grip_traj.joint_trajectory.points.back().positions[0];
+                    }
+                    
+                    if (gripper_pos < 0.1)
+                    {
+                        RCLCPP_INFO(this->get_logger(), "Gripper command interpreted as: OPEN");
+                    }
+                    else if (gripper_pos > 0.6)
+                    {
+                        RCLCPP_INFO(this->get_logger(), "Gripper command interpreted as: CLOSE");
+                    }
+                    else
+                    {
+                        RCLCPP_WARN(this->get_logger(), "Gripper command position (%.3f) is ambiguous.", gripper_pos);
+                    }
+
+                    auto goal_msg = GripperCommand::Goal();
+                    goal_msg.command.position = gripper_pos;
+                    goal_msg.command.max_effort = 0.0;
+
+                    RCLCPP_INFO(this->get_logger(), "Sending gripper goal: position=%.3f", gripper_pos);
+
+                    auto send_goal_options = rclcpp_action::Client<GripperCommand>::SendGoalOptions();
+                    send_goal_options.result_callback = [this](const GoalHandleGripperCommand::WrappedResult &result) {
+                        if (result.code == rclcpp_action::ResultCode::SUCCEEDED)
+                        {
+                            RCLCPP_INFO(this->get_logger(), "Gripper action succeeded");
+                        }
+                        else
+                        {
+                            RCLCPP_ERROR(this->get_logger(), "Gripper action failed");
+                        }
+                    };
+
+                    auto goal_handle_future = gripper_action_client_->async_send_goal(goal_msg, send_goal_options);
+
+                    // Wait for result (optional)
+                    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), goal_handle_future) !=
+                        rclcpp::FutureReturnCode::SUCCESS)
+                    {
+                        RCLCPP_ERROR(this->get_logger(), "Failed to send gripper goal");
+                        gripper_success = false;
+                        return;
+                    }
+
+                    // Optionally wait for result here (blocking)
+                    auto goal_handle = goal_handle_future.get();
+                    if (!goal_handle)
+                    {
+                        RCLCPP_ERROR(this->get_logger(), "Goal was rejected by server");
+                        gripper_success = false;
+                        return;
+                    }
+
+                    auto result_future = gripper_action_client_->async_get_result(goal_handle);
+                    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result_future) !=
+                        rclcpp::FutureReturnCode::SUCCESS)
+                    {
+                        RCLCPP_ERROR(this->get_logger(), "Failed to get gripper result");
+                        gripper_success = false;
+                        return;
+                    }
+
+                    auto result = result_future.get();
+                    gripper_success = (result.code == rclcpp_action::ResultCode::SUCCEEDED);
+                });
+                    
                 manip_thread.join();
                 gripper_thread.join();
 
-                if (!manip_success || !grip_success)
+                if (!manip_success || !gripper_success)
                 {
                     RCLCPP_ERROR(this->get_logger(), "Execution failed for: %s", filepath.c_str());
                 }
@@ -287,11 +346,12 @@ public:
 
 
         RCLCPP_INFO(this->get_logger(), "Finished executing all saved trajectories");
-    }
+     }
 
 private:
     std::shared_ptr<moveit::planning_interface::MoveGroupInterface> manipulator_group_;
     std::shared_ptr<moveit::planning_interface::MoveGroupInterface> gripper_group_;
+    rclcpp_action::Client<GripperCommand>::SharedPtr gripper_action_client_;
 };
 
 

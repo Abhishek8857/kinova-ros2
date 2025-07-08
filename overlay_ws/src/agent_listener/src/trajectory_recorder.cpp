@@ -59,7 +59,7 @@ class TrajectoryRecorder : public rclcpp::Node
                 "/joint_states", 10, std::bind(&TrajectoryRecorder::joint_state_callback, this, _1));
 
             timer = this->create_wall_timer(
-                std::chrono::seconds(30), 
+                std::chrono::seconds(40), 
                 std::bind(&TrajectoryRecorder::saveToFile, this));
         }
 
