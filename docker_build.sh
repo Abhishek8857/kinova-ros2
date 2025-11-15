@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-CONTAINER_NAME=$(cat container_name.cfg)
+CONTAINER_NAME=$(cat image_name.cfg)
 
 LOW_MEMORY=false
 

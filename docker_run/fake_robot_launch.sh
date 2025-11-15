@@ -3,8 +3,9 @@
 SCRIPT_DIR="$(dirname $(readlink -f $0))"
 REPO_DIR="$(realpath "${SCRIPT_DIR}/..")"	
 PARENT_DIR="$(realpath "${REPO_DIR}/..")"
-
 RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+IMAGE_NAME=$(cat "${SCRIPT_DIR}/image_name.cfg")
+
 
 xhost +
 docker run \
@@ -25,5 +26,5 @@ docker run \
         -v "$REPO_DIR:/kinova-ros2:rw" \
         -v $PARENT_DIR:/root/workspaces/kinova_ws/src:rw \
         -w /kinova-ros2 \
-        ros2-kortex-vision-moveit:latest \
+        kinova-devel:latest \
         /kinova-ros2/entrypoint_scripts/entrypoint_fake_robot_launch.sh

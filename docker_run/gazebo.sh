@@ -3,8 +3,10 @@
 SCRIPT_DIR="$(dirname $(readlink -f $0))"
 REPO_DIR="$(realpath "${SCRIPT_DIR}/..")"	
 PARENT_DIR="$(realpath "${REPO_DIR}/..")"
-
 RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+IMAGE_NAME=$(cat "${SCRIPT_DIR}/image_name.cfg")
+
+
 
 xhost +
 docker run \
