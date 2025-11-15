@@ -3,3 +3,4 @@
 /*log
 # Ignore trajectories recorded
 trajectories/*
+**/**.code-workspace
