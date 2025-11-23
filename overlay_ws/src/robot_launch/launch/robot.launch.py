@@ -66,7 +66,7 @@ def launch_setup(context, *args, **kwargs):
         .to_moveit_configs()
     )
 
-    moveit_config.moveit_cpp.update({"use_sim_time": use_sim_time.perform(context) == "true"})
+    moveit_config.moveit_cpp.update({"use_sim_time": use_sim_time})
     
     # octomap_config = {'octomap_frame': 'camera_rgb_optical_frame', 
     #                   'octomap_resolution': 0.01,
@@ -93,6 +93,8 @@ def launch_setup(context, *args, **kwargs):
         name="static_transform_publisher",
         output="log",
         arguments=["--frame-id", "world", "--child-frame-id", "base_link"],
+        #arguments=["0", "0", "0", "0", "0", "0", "world", "base_link"],
+
     )
 
     # Publish TF
@@ -107,21 +109,26 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # ros2_control using FakeSystem as hardware
-    ros2_controllers_path = os.path.join(
-        get_package_share_directory("kinova_gen3_7dof_robotiq_2f_85_moveit_config"),
-        "config",
-        "ros2_controllers.yaml",
-    )
+    # ros2_controllers_path = os.path.join(
+    #     get_package_share_directory("kinova_gen3_7dof_robotiq_2f_85_moveit_config"),
+    #     "config",
+    #     "ros2_controllers.yaml",
+    # )
     
     ros2_control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[moveit_config.robot_description, ros2_controllers_path], # changed
-        remappings=[
-            ("/controller_manager/robot_description", "/robot_description"),
+        parameters=[
+            moveit_config.robot_description, 
+            {"use_sim_time": use_sim_time},
+            os.path.join(
+                get_package_share_directory("kinova_gen3_7dof_robotiq_2f_85_moveit_config"),
+                "config",
+                "ros2_controllers.yaml"
+            )
         ],
-        output="both",
     )
+
 
     robot_traj_controller_spawner = Node(
         package="controller_manager",
@@ -189,6 +196,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     nodes_to_start = [
+        static_tf,
         ros2_control_node,
         robot_state_publisher,
         joint_state_broadcaster_spawner,
@@ -198,7 +206,6 @@ def launch_setup(context, *args, **kwargs):
         robot_hand_controller_spawner,
         fault_controller_spawner,
         move_group_node,
-        static_tf,
     ]
 
     return nodes_to_start

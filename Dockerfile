@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-kortex-bringup \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
     ros-${ROS_DISTRO}-kinova-gen3-7dof-robotiq-2f-85-moveit-config \
+    ros-${ROS_DISTRO}-topic-based-ros2-control \
     # Dependancies for ros2_kortex_vision
     gstreamer1.0-tools\
     gstreamer1.0-libav \
@@ -81,14 +82,14 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     fi
 
 
-# # Copy contents in overlay ws
-# COPY overlay_ws/ /overlay_ws/
-# WORKDIR /overlay_ws/
+# Copy contents in overlay ws
+COPY overlay_ws/ /overlay_ws/
+WORKDIR /overlay_ws/
 
 # RUN rosdep install --from-paths src --ignore-src -r -y
 
-# RUN source /colcon_ws/install/setup.bash && \
-#     colcon build --event-handlers desktop_notification- status- --cmake-args -DCMAKE_BUILD_TYPE=Release
+RUN source /colcon_ws/install/setup.bash && \
+    colcon build --event-handlers desktop_notification- status- --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 # Set the entrypoint script (modify the entrypoint script as needed)
 # ENTRYPOINT ["/entrypoint_scripts/entrypoint_base_node.sh"]
