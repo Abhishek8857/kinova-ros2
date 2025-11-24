@@ -1,0 +1,44 @@
+running egg_info
+creating ../../build/kinova_ops/kinova_ops.egg-info
+writing ../../build/kinova_ops/kinova_ops.egg-info/PKG-INFO
+writing dependency_links to ../../build/kinova_ops/kinova_ops.egg-info/dependency_links.txt
+writing entry points to ../../build/kinova_ops/kinova_ops.egg-info/entry_points.txt
+writing requirements to ../../build/kinova_ops/kinova_ops.egg-info/requires.txt
+writing top-level names to ../../build/kinova_ops/kinova_ops.egg-info/top_level.txt
+writing manifest file '../../build/kinova_ops/kinova_ops.egg-info/SOURCES.txt'
+reading manifest file '../../build/kinova_ops/kinova_ops.egg-info/SOURCES.txt'
+writing manifest file '../../build/kinova_ops/kinova_ops.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build
+creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build/lib
+creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build/lib/kinova_ops
+copying kinova_ops/kinova_ops2.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build/lib/kinova_ops
+copying kinova_ops/__init__.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build/lib/kinova_ops
+copying kinova_ops/kinova_ops.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build/lib/kinova_ops
+copying kinova_ops/kinova_ops3.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build/lib/kinova_ops
+running install
+running install_lib
+creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/python3.10/site-packages/kinova_ops
+copying /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build/lib/kinova_ops/kinova_ops2.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/python3.10/site-packages/kinova_ops
+copying /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build/lib/kinova_ops/__init__.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/python3.10/site-packages/kinova_ops
+copying /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build/lib/kinova_ops/kinova_ops.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/python3.10/site-packages/kinova_ops
+copying /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/build/lib/kinova_ops/kinova_ops3.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/python3.10/site-packages/kinova_ops
+byte-compiling /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/python3.10/site-packages/kinova_ops/kinova_ops2.py to kinova_ops2.cpython-310.pyc
+byte-compiling /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/python3.10/site-packages/kinova_ops/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/python3.10/site-packages/kinova_ops/kinova_ops.py to kinova_ops.cpython-310.pyc
+byte-compiling /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/python3.10/site-packages/kinova_ops/kinova_ops3.py to kinova_ops3.cpython-310.pyc
+running install_data
+creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/share/ament_index
+creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/share/ament_index/resource_index
+creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/share/ament_index/resource_index/packages
+copying resource/kinova_ops -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/share/ament_index/resource_index/packages
+copying package.xml -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/share/kinova_ops
+copying launch/kinova_ops.launch.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/share/kinova_ops
+running install_egg_info
+Copying ../../build/kinova_ops/kinova_ops.egg-info to /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/python3.10/site-packages/kinova_ops-0.0.0-py3.10.egg-info
+running install_scripts
+Installing kinova_ops script to /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/kinova_ops
+Installing kinova_ops2 script to /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/kinova_ops
+Installing kinova_ops3 script to /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/kinova_ops/lib/kinova_ops
+writing list of installed files to '/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/kinova_ops/install.log'

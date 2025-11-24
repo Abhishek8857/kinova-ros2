@@ -1,0 +1,45 @@
+[0.290s] Invoking command in '/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/motion_plan': CMAKE_PREFIX_PATH=/home/hiwi/workspaces/agent_ws/install/kinova_agent:/opt/ros/humble /home/hiwi/.local/bin/cmake /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/src/motion_plan -DCMAKE_INSTALL_PREFIX=/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/motion_plan
+[0.334s] [0mCMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+[0.334s]   Compatibility with CMake < 3.10 will be removed from a future version of
+[0.334s]   CMake.
+[0.334s] 
+[0.334s]   Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+[0.334s]   to tell CMake that the project requires at least <min> but has been updated
+[0.334s]   to work with policies introduced by <max> or earlier.
+[0.334s] 
+[0.334s] [0m
+[0.366s] -- The C compiler identification is GNU 11.4.0
+[0.407s] -- The CXX compiler identification is GNU 11.4.0
+[0.411s] -- Detecting C compiler ABI info
+[0.444s] -- Detecting C compiler ABI info - done
+[0.453s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.454s] -- Detecting C compile features
+[0.454s] -- Detecting C compile features - done
+[0.462s] -- Detecting CXX compiler ABI info
+[0.508s] -- Detecting CXX compiler ABI info - done
+[0.517s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.518s] -- Detecting CXX compile features
+[0.518s] -- Detecting CXX compile features - done
+[0.523s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.619s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter
+[0.675s] [31mCMake Error at CMakeLists.txt:10 (find_package):
+[0.675s]   By not providing "Findmoveit_task_constructor_core.cmake" in
+[0.675s]   CMAKE_MODULE_PATH this project has asked CMake to find a package
+[0.675s]   configuration file provided by "moveit_task_constructor_core", but CMake
+[0.675s]   did not find one.
+[0.675s] 
+[0.675s]   Could not find a package configuration file provided by
+[0.675s]   "moveit_task_constructor_core" with any of the following names:
+[0.675s] 
+[0.675s]     moveit_task_constructor_coreConfig.cmake
+[0.675s]     moveit_task_constructor_core-config.cmake
+[0.675s] 
+[0.675s]   Add the installation prefix of "moveit_task_constructor_core" to
+[0.675s]   CMAKE_PREFIX_PATH or set "moveit_task_constructor_core_DIR" to a directory
+[0.675s]   containing one of the above files.  If "moveit_task_constructor_core"
+[0.675s]   provides a separate development package or SDK, be sure it has been
+[0.675s]   installed.
+[0.675s] 
+[0.675s] [0m
+[0.675s] -- Configuring incomplete, errors occurred!
+[0.678s] Invoked command in '/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/motion_plan' returned '1': CMAKE_PREFIX_PATH=/home/hiwi/workspaces/agent_ws/install/kinova_agent:/opt/ros/humble /home/hiwi/.local/bin/cmake /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/src/motion_plan -DCMAKE_INSTALL_PREFIX=/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/motion_plan

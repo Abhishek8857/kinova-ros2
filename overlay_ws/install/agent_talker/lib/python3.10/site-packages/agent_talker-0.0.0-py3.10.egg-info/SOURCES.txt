@@ -1,0 +1,17 @@
+LICENSE
+package.xml
+setup.cfg
+setup.py
+../../build/agent_talker/agent_talker.egg-info/PKG-INFO
+../../build/agent_talker/agent_talker.egg-info/SOURCES.txt
+../../build/agent_talker/agent_talker.egg-info/dependency_links.txt
+../../build/agent_talker/agent_talker.egg-info/entry_points.txt
+../../build/agent_talker/agent_talker.egg-info/requires.txt
+../../build/agent_talker/agent_talker.egg-info/top_level.txt
+../../build/agent_talker/agent_talker.egg-info/zip-safe
+agent_talker/__init__.py
+agent_talker/to_text.py
+resource/agent_talker
+test/test_copyright.py
+test/test_flake8.py
+test/test_pep257.py

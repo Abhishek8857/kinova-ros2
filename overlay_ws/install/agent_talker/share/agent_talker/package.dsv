@@ -1,0 +1,6 @@
+source;share/agent_talker/hook/pythonpath.ps1
+source;share/agent_talker/hook/pythonpath.dsv
+source;share/agent_talker/hook/pythonpath.sh
+source;share/agent_talker/hook/ament_prefix_path.ps1
+source;share/agent_talker/hook/ament_prefix_path.dsv
+source;share/agent_talker/hook/ament_prefix_path.sh

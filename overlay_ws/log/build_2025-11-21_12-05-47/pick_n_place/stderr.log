@@ -1,0 +1,28 @@
+[0mCMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+[0m
+[31mCMake Error at CMakeLists.txt:10 (find_package):
+  By not providing "Findmoveit_task_constructor_core.cmake" in
+  CMAKE_MODULE_PATH this project has asked CMake to find a package
+  configuration file provided by "moveit_task_constructor_core", but CMake
+  did not find one.
+
+  Could not find a package configuration file provided by
+  "moveit_task_constructor_core" with any of the following names:
+
+    moveit_task_constructor_coreConfig.cmake
+    moveit_task_constructor_core-config.cmake
+
+  Add the installation prefix of "moveit_task_constructor_core" to
+  CMAKE_PREFIX_PATH or set "moveit_task_constructor_core_DIR" to a directory
+  containing one of the above files.  If "moveit_task_constructor_core"
+  provides a separate development package or SDK, be sure it has been
+  installed.
+
+[0m

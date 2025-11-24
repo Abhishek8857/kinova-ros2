@@ -1,0 +1,5 @@
+[console_scripts]
+kinova_ops = kinova_ops.kinova_ops:main
+kinova_ops2 = kinova_ops.kinova_ops2:main
+kinova_ops3 = kinova_ops.kinova_ops3:main
+

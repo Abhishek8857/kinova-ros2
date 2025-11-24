@@ -1,0 +1,3 @@
+[console_scripts]
+to_text = agent_talker.to_text:main
+

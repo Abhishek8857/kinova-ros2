@@ -1,0 +1,37 @@
+[0.291s] Invoking command in '/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/robot_launch': CMAKE_PREFIX_PATH=/home/hiwi/workspaces/agent_ws/install/kinova_agent:/opt/ros/humble /home/hiwi/.local/bin/cmake /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/src/robot_launch -DCMAKE_INSTALL_PREFIX=/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/robot_launch
+[0.333s] [0mCMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+[0.333s]   Compatibility with CMake < 3.10 will be removed from a future version of
+[0.334s]   CMake.
+[0.334s] 
+[0.334s]   Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+[0.334s]   to tell CMake that the project requires at least <min> but has been updated
+[0.334s]   to work with policies introduced by <max> or earlier.
+[0.334s] 
+[0.334s] [0m
+[0.361s] -- The C compiler identification is GNU 11.4.0
+[0.408s] -- The CXX compiler identification is GNU 11.4.0
+[0.415s] -- Detecting C compiler ABI info
+[0.456s] -- Detecting C compiler ABI info - done
+[0.466s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.466s] -- Detecting C compile features
+[0.466s] -- Detecting C compile features - done
+[0.477s] -- Detecting CXX compiler ABI info
+[0.518s] -- Detecting CXX compiler ABI info - done
+[0.527s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.527s] -- Detecting CXX compile features
+[0.527s] -- Detecting CXX compile features - done
+[0.534s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.647s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter
+[0.707s] -- Found ament_lint_auto: 0.12.14 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[0.756s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[0.756s] -- Configured cppcheck include dirs: $<BUILD_INTERFACE:/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/src/robot_launch/include>
+[0.756s] -- Configured cppcheck exclude dirs and/or files: 
+[0.756s] -- Added test 'flake8' to check Python code syntax and style conventions
+[0.757s] -- Added test 'lint_cmake' to check CMake code style
+[0.757s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[0.758s] -- Added test 'uncrustify' to check C / C++ code style
+[0.758s] -- Configured uncrustify additional arguments: 
+[0.759s] -- Added test 'xmllint' to check XML markup files
+[0.760s] -- Configuring done (0.4s)
+[0.762s] -- Generating done (0.0s)
+[0.762s] -- Build files have been written to: /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/robot_launch

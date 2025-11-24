@@ -1,0 +1,38 @@
+[0.496s] Invoking command in '/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/src/agent_talker': PYTHONPATH=/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/prefix_override:/home/hiwi/.local/lib/python3.10/site-packages/colcon_core/task/python/colcon_distutils_commands:/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/agent_talker build --build-base /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/build install --record /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/install.log --single-version-externally-managed install_data
+[0.621s] running egg_info
+[0.621s] creating ../../build/agent_talker/agent_talker.egg-info
+[0.621s] writing ../../build/agent_talker/agent_talker.egg-info/PKG-INFO
+[0.621s] writing dependency_links to ../../build/agent_talker/agent_talker.egg-info/dependency_links.txt
+[0.621s] writing entry points to ../../build/agent_talker/agent_talker.egg-info/entry_points.txt
+[0.621s] writing requirements to ../../build/agent_talker/agent_talker.egg-info/requires.txt
+[0.621s] writing top-level names to ../../build/agent_talker/agent_talker.egg-info/top_level.txt
+[0.622s] writing manifest file '../../build/agent_talker/agent_talker.egg-info/SOURCES.txt'
+[0.622s] reading manifest file '../../build/agent_talker/agent_talker.egg-info/SOURCES.txt'
+[0.622s] adding license file 'LICENSE'
+[0.623s] writing manifest file '../../build/agent_talker/agent_talker.egg-info/SOURCES.txt'
+[0.623s] running build
+[0.623s] running build_py
+[0.623s] creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/build
+[0.623s] creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/build/lib
+[0.623s] creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/build/lib/agent_talker
+[0.623s] copying agent_talker/__init__.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/build/lib/agent_talker
+[0.624s] copying agent_talker/to_text.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/build/lib/agent_talker
+[0.624s] running install
+[0.624s] running install_lib
+[0.624s] creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/lib/python3.10/site-packages/agent_talker
+[0.624s] copying /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/build/lib/agent_talker/__init__.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/lib/python3.10/site-packages/agent_talker
+[0.624s] copying /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/build/lib/agent_talker/to_text.py -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/lib/python3.10/site-packages/agent_talker
+[0.624s] byte-compiling /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/lib/python3.10/site-packages/agent_talker/__init__.py to __init__.cpython-310.pyc
+[0.624s] byte-compiling /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/lib/python3.10/site-packages/agent_talker/to_text.py to to_text.cpython-310.pyc
+[0.624s] running install_data
+[0.624s] creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/share/ament_index
+[0.624s] creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/share/ament_index/resource_index
+[0.624s] creating /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/share/ament_index/resource_index/packages
+[0.624s] copying resource/agent_talker -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/share/ament_index/resource_index/packages
+[0.624s] copying package.xml -> /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/share/agent_talker
+[0.624s] running install_egg_info
+[0.625s] Copying ../../build/agent_talker/agent_talker.egg-info to /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/lib/python3.10/site-packages/agent_talker-0.0.0-py3.10.egg-info
+[0.625s] running install_scripts
+[0.637s] Installing to_text script to /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/lib/agent_talker
+[0.637s] writing list of installed files to '/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/install.log'
+[0.652s] Invoked command in '/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/src/agent_talker' returned '0': PYTHONPATH=/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/prefix_override:/home/hiwi/.local/lib/python3.10/site-packages/colcon_core/task/python/colcon_distutils_commands:/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/agent_talker/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/agent_talker build --build-base /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/build install --record /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/agent_talker/install.log --single-version-externally-managed install_data

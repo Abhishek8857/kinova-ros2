@@ -1,0 +1,1 @@
+Invoking command in '/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/robot_launch': CMAKE_PREFIX_PATH=/home/hiwi/workspaces/agent_ws/install/kinova_agent:/opt/ros/humble /home/hiwi/.local/bin/cmake /home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/src/robot_launch -DCMAKE_INSTALL_PREFIX=/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/install/robot_launch

@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/hiwi/workspaces/kinova_ws/kinova-ros2/overlay_ws/build/robot_launch/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
