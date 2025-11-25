@@ -25,5 +25,5 @@ docker run \
         -v "$REPO_DIR:/kinova-ros2:rw" \
         -v $PARENT_DIR:/root/workspaces/kinova_ws/src/:rw \
         -w /kinova-ros2 \
-        ros2-kortex-vision-moveit:latest \
+        ros2-kortex-vision-moveit_web_interface:latest \
         /kinova-ros2/entrypoint_scripts/entrypoint_agent_talker.sh

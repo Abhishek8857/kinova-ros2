@@ -25,4 +25,4 @@ docker run \
         -v "$REPO_DIR:/kinova-ros2:rw" \
         -v $PARENT_DIR:/root/workspaces/kinova_ws/src/:rw \
         -w /overlay_ws \
-        ros2-kortex-vision-moveit:latest \
+        ros2-kortex-vision-moveit_web_interface:latest \
