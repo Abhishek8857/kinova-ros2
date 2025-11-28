@@ -6,6 +6,7 @@ PARENT_DIR="$(realpath "${REPO_DIR}/..")"
 RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 IMAGE_NAME=$(cat "${REPO_DIR}/image_name.cfg")
 
+
 xhost +
 docker run \
 		-it \
@@ -25,5 +26,5 @@ docker run \
         -v "$REPO_DIR:/kinova-ros2:rw" \
         -v $PARENT_DIR:/root/workspaces/kinova_ws/src:rw \
         -w /kinova-ros2 \
-        ros2-kortex-vision-moveit:latest \
+    	$IMAGE_NAME \
         /kinova-ros2/entrypoint_scripts/entrypoint_vision.sh

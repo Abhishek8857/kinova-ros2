@@ -26,5 +26,5 @@ docker run \
         -v "$REPO_DIR:/kinova-ros2:rw" \
         -v $PARENT_DIR:/root/workspaces/kinova_ws/src:rw \
         -w /kinova-ros2 \
-        kinova-devel:latest \
+    	$IMAGE_NAME \
         /kinova-ros2/entrypoint_scripts/entrypoint_fake_robot_launch.sh
