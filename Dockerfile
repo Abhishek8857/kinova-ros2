@@ -89,7 +89,7 @@ WORKDIR /overlay_ws/
 # RUN rosdep install --from-paths src --ignore-src -r -y
 
 RUN source /colcon_ws/install/setup.bash && \
-    colcon build --event-handlers desktop_notification- status- --cmake-args -DCMAKE_BUILD_TYPE=Release
+    colcon build --event-handlers desktop_notification- status- --cmake-args -DCMAKE_BUILD_TYPE=Release --symlink-install
 
 # Set the entrypoint script (modify the entrypoint script as needed)
 # ENTRYPOINT ["/entrypoint_scripts/entrypoint_base_node.sh"]
