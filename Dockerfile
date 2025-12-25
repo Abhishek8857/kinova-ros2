@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     python3-colcon-common-extensions \
     python3-vcstool \
     ros-dev-tools \
+    nlohmann-json3-dev \
     # Dependancies for ros2_kortex
     ros-${ROS_DISTRO}-kortex-bringup \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
