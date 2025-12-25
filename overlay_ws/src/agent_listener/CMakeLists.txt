@@ -12,7 +12,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
-
+find_package(nlohmann_json REQUIRED)
 add_executable(agent_listener src/agent_listener.cpp)
 add_executable(trajectory_player src/trajectory_player.cpp)
 add_executable(trajectory_recorder src/trajectory_recorder.cpp)
@@ -30,7 +30,7 @@ ament_target_dependencies(
 ament_target_dependencies (trajectory_player rclcpp moveit_ros_planning_interface control_msgs)
 ament_target_dependencies(trajectory_recorder rclcpp sensor_msgs yaml-cpp moveit_ros_planning_interface)
 
-target_link_libraries(agent_listener yaml-cpp)
+target_link_libraries(agent_listener yaml-cpp nlohmann_json::nlohmann_json)
 target_link_libraries(trajectory_player yaml-cpp)
 target_link_libraries(trajectory_recorder yaml-cpp)
 
