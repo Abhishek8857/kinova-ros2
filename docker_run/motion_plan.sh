@@ -25,7 +25,7 @@ docker run \
 		--env DISPLAY=$DISPLAY \
         --name motion_plan \
         -v "$REPO_DIR:/kinova-ros2:rw" \
-        -v $PARENT_DIR:/root/workspaces/kinova_ws/src/:rw \
+        -v $PARENT_DIR:/root/workspaces/:rw \
         -w /kinova-ros2 \
     	$IMAGE_NAME \
         /kinova-ros2/entrypoint_scripts/entrypoint_motion_plan.sh

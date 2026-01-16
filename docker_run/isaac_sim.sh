@@ -23,9 +23,9 @@ docker run \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		--env RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION} \
 		--env DISPLAY=$DISPLAY \
-        --name motion_plan \
+        --name isaac_sim \
         -v "$REPO_DIR:/kinova-ros2:rw" \
-        -v $PARENT_DIR:/root/workspaces/kinova_ws/src/:rw \
+        -v $PARENT_DIR:/root/workspaces/:rw \
         -w /kinova-ros2 \
     	$IMAGE_NAME \
         /kinova-ros2/entrypoint_scripts/entrypoint_isaac_sim.sh

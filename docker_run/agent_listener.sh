@@ -24,7 +24,7 @@ docker run \
 		--env DISPLAY=$DISPLAY \
         --name agent_listener \
         -v "$REPO_DIR:/kinova-ros2:rw" \
-        -v $PARENT_DIR:/root/workspaces/kinova_ws/src/:rw \
+        -v $PARENT_DIR:/root/workspaces/:rw \
         -w /kinova-ros2 \
     	$IMAGE_NAME \
         /kinova-ros2/entrypoint_scripts/entrypoint_agent_listener.sh
