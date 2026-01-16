@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
     ros-${ROS_DISTRO}-kinova-gen3-7dof-robotiq-2f-85-moveit-config \
     ros-${ROS_DISTRO}-topic-based-ros2-control \
+    ros-${ROS_DISTRO}-tf-transformations \
     # Dependancies for ros2_kortex_vision
     gstreamer1.0-tools\
     gstreamer1.0-libav \
@@ -48,14 +49,7 @@ COPY colcon_ws/ /colcon_ws/
 WORKDIR /colcon_ws/
 
 # Import additional required Repositories
-RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex.${ROS_DISTRO}.repos
-RUN vcs import src --skip-existing --input src/ros2_kortex/ros2_kortex-not-released.${ROS_DISTRO}.repos
-RUN vcs import src --skip-existing --input src/ros2_kortex/simulation.humble.repos
-
-# Install Gazebo fortress
-RUN sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list' && \
-    wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add - && \
-    apt-get update && sudo apt-get install -y ignition-fortress
+RUN vcs import src --skip-existing --input src/required_repos.repos
 
 # Update package lists and import MoveIt repositories based on the specified ROS distribution
 RUN apt-get update && \
@@ -86,8 +80,6 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
 # Copy contents in overlay ws
 COPY overlay_ws/ /overlay_ws/
 WORKDIR /overlay_ws/
-
-# RUN rosdep install --from-paths src --ignore-src -r -y
 
 RUN source /colcon_ws/install/setup.bash && \
     colcon build --event-handlers desktop_notification- status- --cmake-args -DCMAKE_BUILD_TYPE=Release --symlink-install
