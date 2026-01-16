@@ -1,7 +1,4 @@
 # Goal
-# data[0] = 0.0 -> joint target
-# data[0] = 1.0 -> pose target
-# data[0] = 2.0 -> gripper command
 float64[] data
 
 ---

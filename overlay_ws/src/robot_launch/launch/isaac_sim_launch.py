@@ -22,6 +22,7 @@ def launch_setup(context, *args, **kwargs):
     # Isaac Sim topics
     isaac_joint_states = "/isaac_joint_states"
     isaac_joint_commands = "/isaac_joint_commands"
+    vision = True
 
     # Xacro args
     xacro_args = {
@@ -30,6 +31,7 @@ def launch_setup(context, *args, **kwargs):
         "prefix": "",
         "dof": "7",
         "gripper": "robotiq_2f_85",
+        "vision": "true",
         "gripper_joint_name": "robotiq_85_left_knuckle_joint",
         "sim_isaac": "true",
         "use_fake_hardware": "false",
@@ -110,7 +112,7 @@ def launch_setup(context, *args, **kwargs):
     
     
     trajectory_bridge = Node(
-        package="kinova_isaac",  # Replace with your package name
+        package="kinova_isaac",  
         executable="trajectory_bridge.py",
         name="trajectory_bridge",
         output="screen",

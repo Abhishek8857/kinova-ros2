@@ -1,6 +1,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit_msgs/msg/collision_object.hpp>
+#include <shape_msgs/msg/solid_primitive.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 
@@ -22,9 +24,6 @@ public:
     {
         RCLCPP_INFO(this->get_logger(), "Starting Motion Action Server...");
 
-        // --------------------------
-        // Parameters (override via YAML / launch)
-        // --------------------------
         arm_group_name_ = this->declare_parameter<std::string>("arm_group_name", "manipulator");
         gripper_group_name_ = this->declare_parameter<std::string>("gripper_group_name", "gripper");
         gripper_open_target_ = this->declare_parameter<std::string>("gripper_open_target", "Open");
@@ -36,11 +35,9 @@ public:
         gripper_open_value_ = this->declare_parameter<double>("gripper_open_value", 0.0);
         gripper_close_value_ = this->declare_parameter<double>("gripper_close_value", 1.0);
 
-        // Optional sanity check for joint commands.
         // Set to -1 to disable. For a 7-DOF arm, set to 7.
         joint_dof_expected_ = this->declare_parameter<int>("joint_dof_expected", -1);
 
-        // DO NOT USE shared_from_this() HERE → causes std::bad_weak_ptr
         // We delay initializing MoveGroupInterface until first use.
 
         action_server_ = rclcpp_action::create_server<ExecuteMotion>(
@@ -50,6 +47,8 @@ public:
             std::bind(&MotionActionServer::handle_cancel, this, std::placeholders::_1),
             std::bind(&MotionActionServer::handle_accepted, this, std::placeholders::_1)
         );
+
+        AddWorkspace();
     }
 
 private:
@@ -60,9 +59,116 @@ private:
         std::string error_description{"Motion failed."};
     };
 
-    // --------------------------
+    // Add collision objects 
+    void AddWorkspace()
+    {
+        moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+        std::vector<moveit_msgs::msg::CollisionObject> workspace_elements;
+
+        std::string frame_id = "world";
+
+        // Add Base to the Robot
+        moveit_msgs::msg::CollisionObject base;
+        base.id = "base";
+        base.header.frame_id = frame_id;
+
+        shape_msgs::msg::SolidPrimitive base_primitives;
+        base_primitives.type = base_primitives.BOX;
+        base_primitives.dimensions = {1.0, 1.0, 0.01};
+
+        geometry_msgs::msg::Pose base_pose;
+        base_pose.orientation.w = 1.0;
+        base_pose.position.z = -0.01;
+
+        base.primitives.push_back(base_primitives);
+        base.primitive_poses.push_back(base_pose);
+        base.operation = base.ADD;
+        workspace_elements.push_back(base);
+
+
+        // Add Top Wall 
+        moveit_msgs::msg::CollisionObject roof;
+        roof.id = "roof";
+        roof.header.frame_id = frame_id;
+
+        shape_msgs::msg::SolidPrimitive roof_primitives;
+        roof_primitives.type = roof_primitives.BOX;
+        roof_primitives.dimensions = {1.0, 1.0, 0.01};
+
+        geometry_msgs::msg::Pose roof_pose;
+        roof_pose.orientation.w = 1.0;
+        roof_pose.position.z = 1.5;
+
+        roof.primitives.push_back(base_primitives);
+        roof.primitive_poses.push_back(roof_pose);
+        roof.operation = roof.ADD;
+        workspace_elements.push_back(roof);
+
+        // Add Back wall
+        moveit_msgs::msg::CollisionObject back_wall;
+        back_wall.id = "back_wall";
+        back_wall.header.frame_id = frame_id;
+
+        shape_msgs::msg::SolidPrimitive back_wall_primitives;
+        back_wall_primitives.type = back_wall_primitives.BOX;
+        back_wall_primitives.dimensions = {0.01, 1.01, 1.52};
+
+        geometry_msgs::msg::Pose back_wall_pose;
+        back_wall_pose.orientation.w = 1.0;
+        back_wall_pose.position.x = -0.5;
+        back_wall_pose.position.y = 0.0;
+        back_wall_pose.position.z = 0.745;
+
+        back_wall.primitives.push_back(back_wall_primitives);
+        back_wall.primitive_poses.push_back(back_wall_pose);
+        back_wall.operation = back_wall.ADD;
+        workspace_elements.push_back(back_wall);
+
+        // Add Left Wall
+        moveit_msgs::msg::CollisionObject left_wall;
+        left_wall.id = "left_wall";
+        left_wall.header.frame_id = frame_id;
+
+        shape_msgs::msg::SolidPrimitive left_wall_primitives;
+        left_wall_primitives.type = left_wall_primitives.BOX;
+        left_wall_primitives.dimensions = {1.0, 0.01, 1.52};
+
+        geometry_msgs::msg::Pose left_wall_pose;
+        left_wall_pose.orientation.w = 1.0;
+        left_wall.pose.position.x = 0.0;
+        left_wall.pose.position.y = -0.5;
+        left_wall.pose.position.z = 0.745;
+
+        left_wall.primitives.push_back(left_wall_primitives);
+        left_wall.primitive_poses.push_back(left_wall_pose);
+        left_wall.operation = left_wall.ADD;
+        workspace_elements.push_back(left_wall);
+
+        // Add Right Wall
+        moveit_msgs::msg::CollisionObject right_wall;
+        right_wall.id = "right_wall";
+        right_wall.header.frame_id = frame_id;
+
+        shape_msgs::msg::SolidPrimitive right_wall_primitives;
+        right_wall_primitives.type = right_wall_primitives.BOX;
+        right_wall_primitives.dimensions = {1.0, 0.01, 1.52};
+
+        geometry_msgs::msg::Pose right_wall_pose;
+        right_wall_pose.orientation.w = 1.0;
+        right_wall_pose.position.x = 0.0;
+        right_wall_pose.position.y = 0.5;
+        right_wall_pose.position.z = 0.745;
+
+        right_wall.primitives.push_back(right_wall_primitives);
+        right_wall.primitive_poses.push_back(right_wall_pose);
+        right_wall.operation = right_wall.ADD;
+        workspace_elements.push_back(right_wall);
+
+        planning_scene_interface.applyCollisionObjects(workspace_elements);
+    }
+
+
     // Lazy init: Arm MoveGroup
-    // --------------------------
     void ensure_arm_move_group()
     {
         if (arm_move_group_) {
@@ -78,16 +184,14 @@ private:
 
         arm_move_group_->setPlanningPipelineId("pilz_industrial_motion_planner");
         arm_move_group_->setPlannerId("PTP");
-        arm_move_group_->setPlanningTime(5.0);
+        arm_move_group_->setPlanningTime(10.0);
         arm_move_group_->setMaxVelocityScalingFactor(0.10);
         arm_move_group_->setMaxAccelerationScalingFactor(0.10);
 
         RCLCPP_INFO(this->get_logger(), "Arm MoveGroupInterface initialized (group: %s).", arm_group_name_.c_str());
     }
 
-    // --------------------------
     // Lazy init: Gripper MoveGroup
-    // --------------------------
     void ensure_gripper_move_group()
     {
         if (gripper_move_group_) {
@@ -107,9 +211,7 @@ private:
         RCLCPP_INFO(this->get_logger(), "Gripper MoveGroupInterface initialized (group: %s).", gripper_group_name_.c_str());
     }
 
-    // --------------------------
     // Action callbacks
-    // --------------------------
     rclcpp_action::GoalResponse handle_goal(
         const rclcpp_action::GoalUUID &,
         std::shared_ptr<const ExecuteMotion::Goal> goal)
@@ -138,9 +240,7 @@ private:
         }.detach();
     }
 
-    // ------------------------------
     // EXECUTION LOGIC
-    // ------------------------------
     void execute(const std::shared_ptr<GoalHandleExecuteMotion> goal_handle)
     {
         auto result = std::make_shared<ExecuteMotion::Result>();
@@ -213,9 +313,7 @@ private:
         }
     }
 
-    // ------------------------------
     // MOVEIT EXECUTION HELPERS
-    // ------------------------------
     MotionOutcome plan_and_execute_joint(const std::vector<double>& data,
                                         const std::shared_ptr<GoalHandleExecuteMotion>& goal_handle)
     {

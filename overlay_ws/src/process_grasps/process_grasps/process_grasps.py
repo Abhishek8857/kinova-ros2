@@ -21,7 +21,7 @@ class ProcessGrasps(Node):
         super().__init__("process_grasps")
 
         # -------- params --------
-        self.declare_parameter("predictions_path", "/root/workspaces/thesis/ros-ai-agent/predictions/predictions_rgbd_image.npz")
+        self.declare_parameter("predictions_path", "/root/workspaces/ros-ai-agent/predictions/predictions_rgbd_image.npz")
         self.declare_parameter("publish_topic", "/grasp_pose")
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("camera_frame", "camera_link")

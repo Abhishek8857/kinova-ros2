@@ -8,7 +8,7 @@ import threading
 class ToText(Node):
     def __init__(self):
         super().__init__("to_text")
-        self.publisher = self.create_publisher(String, "transcription_text", 10)
+        self.publisher = self.create_publisher(String, "/query", 10)
         self.running = True
         
         input_thread = threading.Thread(target=self.read_input)
