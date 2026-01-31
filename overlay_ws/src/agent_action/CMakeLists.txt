@@ -12,6 +12,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
+find_package(moveit_core REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
@@ -32,9 +33,16 @@ target_include_directories(execute_motion_server PUBLIC
 ament_target_dependencies(execute_motion_server
   rclcpp
   rclcpp_action
+  moveit_core
   moveit_ros_planning_interface
   agent_action_interface
 )
+
+target_link_libraries(execute_motion_server
+  moveit_core::moveit_robot_trajectory
+  moveit_core::moveit_trajectory_processing
+)
+
 
 # rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
 # target_link_libraries(execute_motion_server ${cpp_typesupport_target})

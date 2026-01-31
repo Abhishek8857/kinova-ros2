@@ -27,7 +27,8 @@ class ProcessGrasps(Node):
         self.declare_parameter("camera_frame", "camera_link")
         self.declare_parameter("rgb_topic", "/front_stereo_camera/rgb/image_raw")
 
-        self.declare_parameter("eef_offset_z", 0.0)     # meters
+        self.declare_parameter("eef_offset_z", 0.0)
+        self.declare_parameter("eef_offset_x", 0.0)     
         self.declare_parameter("poll_period_s", 0.5)
         self.declare_parameter("tf_timeout_s", 2.0)
         self.declare_parameter("file_stable_wait_s", 0.20)
@@ -39,6 +40,7 @@ class ProcessGrasps(Node):
         self.rgb_topic = self.get_parameter("rgb_topic").value
 
         self.eef_offset_z = float(self.get_parameter("eef_offset_z").value)
+        self.eef_offset_x = float(self.get_parameter("eef_offset_x").value)
         self.tf_timeout_s = float(self.get_parameter("tf_timeout_s").value)
         self.file_stable_wait_s = float(self.get_parameter("file_stable_wait_s").value)
 
@@ -131,10 +133,7 @@ class ProcessGrasps(Node):
         pos = T_cam_grasp[:3, 3]
         q = quaternion_from_matrix(T_cam_grasp)
         
-        # DEBUG: 
-        self.get_logger().info(f"Pose: {[float(pos[0]), float(pos[1]), float(pos[2])]}")
-        self.get_logger().info(f"Quaternion: {[float(q[0]), float(q[1]), float(q[2]), float(q[3])]}")
-
+        
         grasp_pose_cam = PoseStamped()
         grasp_pose_cam.header.frame_id = self.camera_frame
         grasp_pose_cam.header.stamp = self.get_clock().now().to_msg()
@@ -205,8 +204,8 @@ class ProcessGrasps(Node):
             pose.pose.position.z
         ]
 
-        # optional offset (pre-grasp-ish). Set eef_offset_z=0 if you do pregrasp elsewhere.
         T_offset = np.eye(4)
+        T_offset[0, 3] = self.eef_offset_x
         T_offset[2, 3] = self.eef_offset_z
 
         T_base_grasp = T_base_cam @ T_cam_grasp @ T_offset
@@ -223,6 +222,10 @@ class ProcessGrasps(Node):
         out.pose.orientation.y = float(q[1])
         out.pose.orientation.z = float(q[2])
         out.pose.orientation.w = float(q[3])
+        
+        self.get_logger().info(
+            f"Applying offset in grasp frame: x={self.eef_offset_x}, z={self.eef_offset_z}"
+        )
 
         return out
 

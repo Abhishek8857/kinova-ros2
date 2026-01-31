@@ -5,6 +5,11 @@
 #include <shape_msgs/msg/solid_primitive.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <moveit/robot_trajectory/robot_trajectory.h>
+#include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
 
 #include <algorithm>
 #include <map>
@@ -29,7 +34,6 @@ public:
         gripper_open_target_ = this->declare_parameter<std::string>("gripper_open_target", "Open");
         gripper_close_target_ = this->declare_parameter<std::string>("gripper_close_target", "Close");
 
-        // Optional fallback: control gripper via a joint target (if named targets aren't defined).
         // If gripper_joint_name is empty, fallback is disabled.
         gripper_joint_name_ = this->declare_parameter<std::string>("gripper_joint_name", "");
         gripper_open_value_ = this->declare_parameter<double>("gripper_open_value", 0.0);
@@ -37,6 +41,23 @@ public:
 
         // Set to -1 to disable. For a 7-DOF arm, set to 7.
         joint_dof_expected_ = this->declare_parameter<int>("joint_dof_expected", -1);
+
+        // Grasp planning parameters
+        default_pre_grasp_distance_ = this->declare_parameter<double>("default_pre_grasp_distance", 0.15);
+        default_lift_distance_ = this->declare_parameter<double>("default_lift_distance", 0.15);
+        grasp_approach_velocity_ = this->declare_parameter<double>("grasp_approach_velocity", 0.05);
+        grasp_close_velocity_ = this->declare_parameter<double>("grasp_close_velocity", 0.3);
+        grasp_lift_velocity_ = this->declare_parameter<double>("grasp_lift_velocity", 0.05);
+
+        // Planner configuration parameters
+        joint_planner_pipeline_ = this->declare_parameter<std::string>("joint_planner_pipeline", "ompl");
+        joint_planner_id_ = this->declare_parameter<std::string>("joint_planner_id", "RRTConnect");
+        joint_planning_time_ = this->declare_parameter<double>("joint_planning_time", 5.0);
+        
+        pose_planner_pipeline_ = this->declare_parameter<std::string>("pose_planner_pipeline", "pilz_industrial_motion_planner");
+        pose_planner_id_ = this->declare_parameter<std::string>("pose_planner_id", "LIN");
+        pose_planning_time_ = this->declare_parameter<double>("pose_planning_time", 5.0);
+        pose_use_ompl_fallback_ = this->declare_parameter<bool>("pose_use_ompl_fallback", true);
 
         // We delay initializing MoveGroupInterface until first use.
 
@@ -78,7 +99,7 @@ private:
 
         geometry_msgs::msg::Pose base_pose;
         base_pose.orientation.w = 1.0;
-        base_pose.position.z = -0.01;
+        base_pose.position.z = -0.05;
 
         base.primitives.push_back(base_primitives);
         base.primitive_poses.push_back(base_pose);
@@ -115,7 +136,7 @@ private:
 
         geometry_msgs::msg::Pose back_wall_pose;
         back_wall_pose.orientation.w = 1.0;
-        back_wall_pose.position.x = -0.5;
+        back_wall_pose.position.x = -0.3;
         back_wall_pose.position.y = 0.0;
         back_wall_pose.position.z = 0.745;
 
@@ -167,49 +188,113 @@ private:
         planning_scene_interface.applyCollisionObjects(workspace_elements);
     }
 
+    void log_pose(const std::string& label, const geometry_msgs::msg::Pose& p)
+    {
+        RCLCPP_INFO(this->get_logger(),
+            "%s pose: position [x=%.3f, y=%.3f, z=%.3f], orientation [x=%.3f, y=%.3f, z=%.3f, w=%.3f]",
+            label.c_str(),
+            p.position.x, p.position.y, p.position.z,
+            p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w
+        );
+    }
 
-    // Lazy init: Arm MoveGroup
+    void configure_for_joint_planning()
+    {
+        if (!arm_move_group_) return;
+        arm_move_group_->setPlanningPipelineId(joint_planner_pipeline_);
+        arm_move_group_->setPlannerId(joint_planner_id_);
+        arm_move_group_->setPlanningTime(joint_planning_time_);
+        arm_move_group_->setMaxVelocityScalingFactor(0.10);
+        arm_move_group_->setMaxAccelerationScalingFactor(0.10);
+    }
+
+    void configure_for_pose_planning()
+    {
+        if (!arm_move_group_) return;
+        arm_move_group_->setPlanningPipelineId(pose_planner_pipeline_);
+        arm_move_group_->setPlannerId(pose_planner_id_);
+        arm_move_group_->setPlanningTime(pose_planning_time_);
+        arm_move_group_->setMaxVelocityScalingFactor(0.10);
+        arm_move_group_->setMaxAccelerationScalingFactor(0.10);
+    }
+
+    void configure_for_gripper_closing()
+    {
+        if (!gripper_move_group_) return;
+        gripper_move_group_->setMaxVelocityScalingFactor(grasp_close_velocity_);
+        gripper_move_group_->setMaxAccelerationScalingFactor(grasp_close_velocity_);
+    }
+
+    void configure_for_lifting()
+    {
+        if (!arm_move_group_) return;
+        arm_move_group_->setMaxVelocityScalingFactor(grasp_lift_velocity_);
+        arm_move_group_->setMaxAccelerationScalingFactor(grasp_lift_velocity_);
+    }
+
     void ensure_arm_move_group()
     {
-        if (arm_move_group_) {
-            return;
-        }
-
-        // SAFE method: aliasing shared_ptr to this node
+        if (arm_move_group_) return;
         auto node_ptr = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node*){});
-
-        arm_move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(
-            node_ptr, arm_group_name_
-        );
-
+        arm_move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(node_ptr, arm_group_name_);
         arm_move_group_->setPlanningPipelineId("pilz_industrial_motion_planner");
         arm_move_group_->setPlannerId("PTP");
         arm_move_group_->setPlanningTime(10.0);
         arm_move_group_->setMaxVelocityScalingFactor(0.10);
         arm_move_group_->setMaxAccelerationScalingFactor(0.10);
-
-        RCLCPP_INFO(this->get_logger(), "Arm MoveGroupInterface initialized (group: %s).", arm_group_name_.c_str());
+        RCLCPP_INFO(this->get_logger(), "Arm MoveGroupInterface initialized.");
     }
 
-    // Lazy init: Gripper MoveGroup
     void ensure_gripper_move_group()
     {
-        if (gripper_move_group_) {
-            return;
-        }
-
+        if (gripper_move_group_) return;
         auto node_ptr = std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node*){});
-
-        gripper_move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(
-            node_ptr, gripper_group_name_
-        );
-
+        gripper_move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(node_ptr, gripper_group_name_);
         gripper_move_group_->setPlanningTime(2.0);
         gripper_move_group_->setMaxVelocityScalingFactor(1.0);
         gripper_move_group_->setMaxAccelerationScalingFactor(1.0);
-
-        RCLCPP_INFO(this->get_logger(), "Gripper MoveGroupInterface initialized (group: %s).", gripper_group_name_.c_str());
+        RCLCPP_INFO(this->get_logger(), "Gripper MoveGroupInterface initialized.");
     }
+
+
+    geometry_msgs::msg::Pose compute_pre_grasp_pose(const geometry_msgs::msg::Pose& grasp_pose, double offset_distance)
+    {
+        // SIMPLE APPROACH: Just offset upward in world Z-axis
+        // This is more reliable than trying to guess gripper frame orientation
+        // Works for top-down grasps (most common in pick-and-place)
+        
+        // geometry_msgs::msg::Pose pre_grasp_pose = grasp_pose;
+        // pre_grasp_pose.position.z += offset_distance;  // Move UP in world frame
+        
+        // return pre_grasp_pose;
+        
+        // ALTERNATIVE: Use gripper frame Z-axis if you know your gripper convention
+        // Uncomment below if gripper Z-axis points down toward object:
+    
+        tf2::Quaternion q(grasp_pose.orientation.x, grasp_pose.orientation.y, 
+                         grasp_pose.orientation.z, grasp_pose.orientation.w);
+        tf2::Matrix3x3 m(q);
+        
+        // If gripper Z points DOWN (toward object), then negative Z is the retreat direction
+        tf2::Vector3 retreat_direction(0, 0, -1);  // Negative Z in gripper = away from object
+        tf2::Vector3 retreat_world = m * retreat_direction;
+        
+        geometry_msgs::msg::Pose pre_grasp_pose = grasp_pose;
+        pre_grasp_pose.position.x += retreat_world.x() * offset_distance;
+        pre_grasp_pose.position.y += retreat_world.y() * offset_distance;
+        pre_grasp_pose.position.z += retreat_world.z() * offset_distance;
+        
+        return pre_grasp_pose;
+        
+    }
+
+    geometry_msgs::msg::Pose compute_lift_pose(const geometry_msgs::msg::Pose& grasp_pose, double lift_distance)
+    {
+        geometry_msgs::msg::Pose lift_pose = grasp_pose;
+        lift_pose.position.z += lift_distance;
+        return lift_pose;
+    }
+
 
     // Action callbacks
     rclcpp_action::GoalResponse handle_goal(
@@ -289,11 +374,21 @@ private:
             ensure_gripper_move_group();
             outcome = execute_gripper_command(data, goal_handle);
             break;
+        case 3:
+            ensure_arm_move_group();
+            ensure_gripper_move_group();
+            outcome = execute_grasp_sequence(data, goal_handle);
+            break;
+        case 4:
+            ensure_arm_move_group();
+            ensure_gripper_move_group();
+            outcome = execute_place_sequence(data, goal_handle);
+            break;
 
         default:
             outcome.success = false;
             outcome.error_code = "INVALID_COMMAND";
-            outcome.error_description = "Unknown command type. Use 0 (joint), 1 (pose), 2 (gripper).";
+            outcome.error_description = "Unknown command type. Use 0 (joint), 1 (pose), 2 (gripper), 3 (grasp), 4 (place).";
             break;
         }
 
@@ -333,7 +428,8 @@ private:
                         n_joints, joint_dof_expected_);
         }
 
-        // IMPORTANT FIX: take all joint values after the flag
+        // take all joint values after the flag
+        configure_for_joint_planning();
         std::vector<double> joints(data.begin() + 1, data.end());
         arm_move_group_->setJointValueTarget(joints);
 
@@ -388,16 +484,68 @@ private:
         target.orientation.z = data[6];
         target.orientation.w = data[7];
 
+        configure_for_pose_planning();
+        
+        // CRITICAL FIX: Set start state to current state before planning
+        arm_move_group_->setStartStateToCurrentState();
+        
         arm_move_group_->setPoseTarget(target);
 
         moveit::planning_interface::MoveGroupInterface::Plan plan;
-        auto plan_code = arm_move_group_->plan(plan);
+        moveit::core::MoveItErrorCode plan_code;
+        std::string planner_used = "NONE";
+
+        // Strategy 1: Try PTP first
+        RCLCPP_INFO(this->get_logger(), "Attempting pose planning with Pilz/PTP...");
+        arm_move_group_->setPlanningPipelineId("pilz_industrial_motion_planner");
+        arm_move_group_->setPlannerId("PTP");
+        arm_move_group_->setPlanningTime(pose_planning_time_);
+        arm_move_group_->setPoseTarget(target);
+        plan_code = arm_move_group_->plan(plan);
+        
+        if (plan_code == moveit::core::MoveItErrorCode::SUCCESS) {
+            planner_used = "Pilz/PTP";
+            RCLCPP_INFO(this->get_logger(), "Planning succeeded with Pilz/PTP");
+        }
+        
+        // Strategy 2: If PTP fails, try LIN
+        if (plan_code != moveit::core::MoveItErrorCode::SUCCESS) {
+            RCLCPP_WARN(this->get_logger(), "Pilz/PTP failed, trying Pilz/LIN...");
+            arm_move_group_->setStartStateToCurrentState();  // Refresh state
+            arm_move_group_->setPlannerId("LIN");
+            arm_move_group_->setPoseTarget(target);
+            plan_code = arm_move_group_->plan(plan);
+            
+            if (plan_code == moveit::core::MoveItErrorCode::SUCCESS) {
+                planner_used = "Pilz/LIN";
+                RCLCPP_INFO(this->get_logger(), "Planning succeeded with Pilz/LIN");
+            }
+        }
+        
+        // Strategy 3: If both Pilz planners fail, try OMPL fallback
+        if (plan_code != moveit::core::MoveItErrorCode::SUCCESS && pose_use_ompl_fallback_) {
+            RCLCPP_WARN(this->get_logger(), "Both Pilz planners failed, trying OMPL fallback...");
+            configure_for_joint_planning();
+            arm_move_group_->setStartStateToCurrentState();  // Refresh state for OMPL
+            arm_move_group_->setPoseTarget(target);
+            plan_code = arm_move_group_->plan(plan);
+            
+            if (plan_code == moveit::core::MoveItErrorCode::SUCCESS) {
+                planner_used = joint_planner_pipeline_ + "/" + joint_planner_id_;
+                RCLCPP_INFO(this->get_logger(), "Planning succeeded with OMPL fallback");
+            }
+        }
+        
+        // All strategies failed
         if (plan_code != moveit::core::MoveItErrorCode::SUCCESS) {
             out.success = false;
             out.error_code = "PLAN_FAILED";
-            out.error_description = "MoveIt planning failed for pose target.";
+            out.error_description = pose_use_ompl_fallback_ 
+                ? "All planning strategies failed (PTP, LIN, OMPL) for pose target."
+                : "Both Pilz planners (PTP, LIN) failed for pose target.";
             return out;
         }
+
 
         // EXECUTING feedback
         auto fb = std::make_shared<ExecuteMotion::Feedback>();
@@ -500,25 +648,353 @@ private:
         return out;
     }
 
+    // NEW: Command type 3 - Full grasp sequence
+    // Format: [3.0, x, y, z, qx, qy, qz, qw, (optional)pre_grasp_offset, (optional)lift_height]
+    MotionOutcome execute_grasp_sequence(const std::vector<double>& data, const std::shared_ptr<GoalHandleExecuteMotion>& goal_handle)
+    {
+        MotionOutcome out;
+        if (data.size() < 8) {
+            out.error_code = "INVALID_GOAL";
+            out.error_description = "Grasp needs [3.0, x, y, z, qx, qy, qz, qw, (opt)offset, (opt)lift].";
+            return out;
+        }
+
+        geometry_msgs::msg::Pose grasp_pose;
+        grasp_pose.position.x = data[1]; 
+        grasp_pose.position.y = data[2]; 
+        grasp_pose.position.z = data[3] + 0.025;
+        grasp_pose.orientation.x = data[4]; 
+        grasp_pose.orientation.y = data[5];
+        grasp_pose.orientation.z = data[6]; 
+        grasp_pose.orientation.w = data[7];
+
+        double pre_grasp_offset = (data.size() >= 9) ? data[8] : default_pre_grasp_distance_;
+        double lift_height = (data.size() >= 10) ? data[9] : default_lift_distance_;
+
+        auto fb = std::make_shared<ExecuteMotion::Feedback>();
+
+        RCLCPP_INFO(this->get_logger(), "Waiting before approach...");
+        rclcpp::sleep_for(std::chrono::seconds(1));  // 0.5 seconds
+
+        // Step 1: Open gripper
+        RCLCPP_INFO(this->get_logger(), "Grasp Step 1/5: Opening gripper");
+        fb->state = "OPENING_GRIPPER"; 
+        fb->progress = 0.20f; 
+        goal_handle->publish_feedback(fb);
+        
+        if (!gripper_move_group_->setNamedTarget(gripper_open_target_)) {
+            out.error_code = "GRIPPER_OPEN_FAILED"; 
+            return out;
+        }
+        
+        moveit::planning_interface::MoveGroupInterface::Plan gplan;
+        if (gripper_move_group_->plan(gplan) != moveit::core::MoveItErrorCode::SUCCESS ||
+            gripper_move_group_->execute(gplan) != moveit::core::MoveItErrorCode::SUCCESS) {
+            out.error_code = "GRIPPER_OPEN_EXEC_FAILED"; 
+            return out;
+        }
+
+        RCLCPP_INFO(this->get_logger(), "Waiting before approach...");
+        rclcpp::sleep_for(std::chrono::seconds(1));  // 0.5 seconds
+
+        
+        // Step 2: Move to pre-grasp
+        RCLCPP_INFO(this->get_logger(), "Grasp Step 2/5: Moving to pre-grasp");
+        fb->state = "MOVING_TO_PRE_GRASP"; 
+        fb->progress = 0.40f; 
+        goal_handle->publish_feedback(fb);
+        
+        geometry_msgs::msg::Pose pre_grasp = compute_pre_grasp_pose(grasp_pose, pre_grasp_offset);
+        configure_for_pose_planning();
+
+        log_pose("GRASP POSE: ", grasp_pose);
+        log_pose("PRE GRASP: ", pre_grasp);
+        
+        // CRITICAL FIX: Set start state to current state before planning
+        arm_move_group_->setStartStateToCurrentState();
+        
+        arm_move_group_->setPoseTarget(pre_grasp);
+        moveit::planning_interface::MoveGroupInterface::Plan pplan;
+        auto pcode = arm_move_group_->plan(pplan);
+        
+        if (pcode != moveit::core::MoveItErrorCode::SUCCESS) {
+            configure_for_joint_planning();
+            arm_move_group_->setStartStateToCurrentState();  // Set again for fallback
+            arm_move_group_->setPoseTarget(pre_grasp);
+            pcode = arm_move_group_->plan(pplan);
+            if (pcode != moveit::core::MoveItErrorCode::SUCCESS) {
+                out.error_code = "PRE_GRASP_PLAN_FAILED"; 
+                return out;
+            }
+        }
+        
+        if (arm_move_group_->execute(pplan) != moveit::core::MoveItErrorCode::SUCCESS) {
+            out.error_code = "PRE_GRASP_EXEC_FAILED"; 
+            return out;
+        }
+
+        RCLCPP_INFO(this->get_logger(), "Waiting before approach...");
+        rclcpp::sleep_for(std::chrono::seconds(1));  // 0.5 seconds
+
+        // Step 3: Approach using simple pose planning
+        RCLCPP_INFO(this->get_logger(), "Grasp Step 3/5: Approaching grasp pose");
+        fb->state = "APPROACHING_GRASP"; 
+        fb->progress = 0.60f; 
+        goal_handle->publish_feedback(fb);
+
+        log_pose("APPROACH GRASP POSE: ", grasp_pose);
+
+        // CRITICAL FIX: Set start state to current state before planning
+        arm_move_group_->setStartStateToCurrentState();
+
+        // Use Pilz LIN planner for straight-line motion (faster than cartesian)
+        arm_move_group_->setPlanningPipelineId("pilz_industrial_motion_planner");
+        arm_move_group_->setPlannerId("LIN");
+        arm_move_group_->setPlanningTime(5.0);
+        arm_move_group_->setMaxVelocityScalingFactor(0.05);  // Slow and controlled
+        arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+        arm_move_group_->setPoseTarget(grasp_pose);
+        
+        moveit::planning_interface::MoveGroupInterface::Plan approach_plan;
+        auto approach_code = arm_move_group_->plan(approach_plan);
+        
+        // Fallback to OMPL if LIN fails
+        if (approach_code != moveit::core::MoveItErrorCode::SUCCESS) {
+            RCLCPP_WARN(this->get_logger(), "LIN planner failed, trying OMPL fallback");
+            configure_for_joint_planning();
+            arm_move_group_->setStartStateToCurrentState();  // Set again for OMPL
+            arm_move_group_->setMaxVelocityScalingFactor(0.05);
+            arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+            arm_move_group_->setPoseTarget(grasp_pose);
+            approach_code = arm_move_group_->plan(approach_plan);
+            
+            if (approach_code != moveit::core::MoveItErrorCode::SUCCESS) {
+                out.error_code = "GRASP_APPROACH_PLAN_FAILED"; 
+                return out;
+            }
+        }
+        
+        if (arm_move_group_->execute(approach_plan) != moveit::core::MoveItErrorCode::SUCCESS) {
+            out.error_code = "GRASP_APPROACH_EXEC_FAILED"; 
+            return out;
+        }
+ 
+        RCLCPP_INFO(this->get_logger(), "Waiting before approach...");
+        rclcpp::sleep_for(std::chrono::seconds(1));  // 0.5 seconds
+        // Step 4: Close gripper
+        RCLCPP_INFO(this->get_logger(), "Grasp Step 4/5: Closing gripper");
+        fb->state = "CLOSING_GRIPPER"; 
+        fb->progress = 0.80f; 
+        goal_handle->publish_feedback(fb);
+        
+        configure_for_gripper_closing();
+        
+        if (!gripper_move_group_->setNamedTarget(gripper_close_target_)) {
+            out.error_code = "GRIPPER_CLOSE_FAILED"; 
+            return out;
+        }
+        
+        moveit::planning_interface::MoveGroupInterface::Plan cplan;
+        if (gripper_move_group_->plan(cplan) != moveit::core::MoveItErrorCode::SUCCESS ||
+            gripper_move_group_->execute(cplan) != moveit::core::MoveItErrorCode::SUCCESS) {
+            out.error_code = "GRIPPER_CLOSE_EXEC_FAILED"; 
+            return out;
+        }
+        
+        RCLCPP_INFO(this->get_logger(), "Waiting before approach...");
+        rclcpp::sleep_for(std::chrono::seconds(1));  // 0.5 seconds
+        // Step 5: Lift using simple pose planning (SIMPLIFIED - NO CARTESIAN)
+        RCLCPP_INFO(this->get_logger(), "Grasp Step 5/5: Lifting object");
+        fb->state = "LIFTING_OBJECT"; 
+        fb->progress = 0.90f; 
+        goal_handle->publish_feedback(fb);
+        
+        geometry_msgs::msg::Pose lift_pose = compute_lift_pose(grasp_pose, lift_height);
+        
+        // CRITICAL FIX: Set start state to current state before planning
+        arm_move_group_->setStartStateToCurrentState();
+        
+        // Use LIN planner for straight upward motion
+        arm_move_group_->setPlanningPipelineId("pilz_industrial_motion_planner");
+        arm_move_group_->setPlannerId("LIN");
+        arm_move_group_->setPlanningTime(5.0);
+        arm_move_group_->setMaxVelocityScalingFactor(0.05);
+        arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+        arm_move_group_->setPoseTarget(lift_pose);
+        
+        moveit::planning_interface::MoveGroupInterface::Plan lift_plan;
+        auto lift_code = arm_move_group_->plan(lift_plan);
+        
+        // Fallback to OMPL if LIN fails
+        if (lift_code != moveit::core::MoveItErrorCode::SUCCESS) {
+            RCLCPP_WARN(this->get_logger(), "LIN planner failed for lift, trying OMPL fallback");
+            configure_for_joint_planning();
+            arm_move_group_->setStartStateToCurrentState();  // Set again for fallback
+            arm_move_group_->setMaxVelocityScalingFactor(0.05);
+            arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+            arm_move_group_->setPoseTarget(lift_pose);
+            lift_code = arm_move_group_->plan(lift_plan);
+            
+            if (lift_code != moveit::core::MoveItErrorCode::SUCCESS) {
+                out.error_code = "LIFT_PLAN_FAILED"; 
+                return out;
+            }
+        }
+        
+        if (arm_move_group_->execute(lift_plan) != moveit::core::MoveItErrorCode::SUCCESS) {
+            out.error_code = "LIFT_EXEC_FAILED"; 
+            return out;
+        }
+        
+        out.success = true;
+        out.error_code = "SUCCESS";
+        out.error_description = "Grasp sequence completed.";
+        return out;
+
+    }
+    
+
+    // NEW: Command type 4 - Place sequence
+    // Format: [4.0, x, y, z, qx, qy, qz, qw, (optional)retreat_distance]
+    MotionOutcome execute_place_sequence(const std::vector<double>& data, const std::shared_ptr<GoalHandleExecuteMotion>& goal_handle)
+    {
+        MotionOutcome out;
+        if (data.size() < 8) {
+            out.error_code = "INVALID_GOAL";
+            out.error_description = "Place needs [4.0, x, y, z, qx, qy, qz, qw, (opt)retreat].";
+            return out;
+        }
+
+        geometry_msgs::msg::Pose place_pose;
+        place_pose.position.x = data[1]; 
+        place_pose.position.y = data[2]; 
+        place_pose.position.z = data[3];
+        place_pose.orientation.x = data[4]; 
+        place_pose.orientation.y = data[5];
+        place_pose.orientation.z = data[6]; 
+        place_pose.orientation.w = data[7];
+
+        double retreat_dist = (data.size() >= 9) ? data[8] : default_lift_distance_;
+        auto fb = std::make_shared<ExecuteMotion::Feedback>();
+
+        // Step 1: Move to place pose
+        RCLCPP_INFO(this->get_logger(), "Place Step 1/3: Moving to place pose");
+        fb->state = "MOVING_TO_PLACE"; 
+        fb->progress = 0.33f; 
+        goal_handle->publish_feedback(fb);
+        
+        configure_for_pose_planning();
+        
+        // CRITICAL FIX: Set start state to current state before planning
+        arm_move_group_->setStartStateToCurrentState();
+        
+        arm_move_group_->setPoseTarget(place_pose);
+        
+        moveit::planning_interface::MoveGroupInterface::Plan pplan;
+        auto pcode = arm_move_group_->plan(pplan);
+        
+        if (pcode != moveit::core::MoveItErrorCode::SUCCESS) {
+            configure_for_joint_planning();
+            arm_move_group_->setStartStateToCurrentState();  // Refresh for fallback
+            arm_move_group_->setPoseTarget(place_pose);
+            pcode = arm_move_group_->plan(pplan);
+            if (pcode != moveit::core::MoveItErrorCode::SUCCESS) {
+                out.error_code = "PLACE_PLAN_FAILED"; 
+                return out;
+            }
+        }
+        
+        if (arm_move_group_->execute(pplan) != moveit::core::MoveItErrorCode::SUCCESS) {
+            out.error_code = "PLACE_EXEC_FAILED"; 
+            return out;
+        }
+
+        // Step 2: Open gripper
+        RCLCPP_INFO(this->get_logger(), "Place Step 2/3: Opening gripper");
+        fb->state = "RELEASING_OBJECT"; 
+        fb->progress = 0.66f; 
+        goal_handle->publish_feedback(fb);
+        
+        if (!gripper_move_group_->setNamedTarget(gripper_open_target_)) {
+            out.error_code = "GRIPPER_OPEN_FAILED"; 
+            return out;
+        }
+        
+        moveit::planning_interface::MoveGroupInterface::Plan oplan;
+        if (gripper_move_group_->plan(oplan) != moveit::core::MoveItErrorCode::SUCCESS ||
+            gripper_move_group_->execute(oplan) != moveit::core::MoveItErrorCode::SUCCESS) {
+            out.error_code = "GRIPPER_OPEN_EXEC_FAILED"; 
+            return out;
+        }
+
+        // Step 3: Retreat using simple pose planning (SIMPLIFIED - NO CARTESIAN)
+        RCLCPP_INFO(this->get_logger(), "Place Step 3/3: Retreating");
+        fb->state = "RETREATING"; 
+        fb->progress = 0.90f; 
+        goal_handle->publish_feedback(fb);
+        
+        geometry_msgs::msg::Pose retreat_pose = place_pose;
+        retreat_pose.position.z += retreat_dist;
+        
+        // CRITICAL FIX: Set start state to current state before planning
+        arm_move_group_->setStartStateToCurrentState();
+        
+        // Use LIN planner for straight retreat motion
+        arm_move_group_->setPlanningPipelineId("pilz_industrial_motion_planner");
+        arm_move_group_->setPlannerId("LIN");
+        arm_move_group_->setPlanningTime(5.0);
+        arm_move_group_->setMaxVelocityScalingFactor(0.05);
+        arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+        arm_move_group_->setPoseTarget(retreat_pose);
+        
+        moveit::planning_interface::MoveGroupInterface::Plan retreat_plan;
+        auto retreat_code = arm_move_group_->plan(retreat_plan);
+        
+        // Fallback to OMPL if LIN fails
+        if (retreat_code != moveit::core::MoveItErrorCode::SUCCESS) {
+            RCLCPP_WARN(this->get_logger(), "LIN planner failed for retreat, trying OMPL fallback");
+            configure_for_joint_planning();
+            arm_move_group_->setStartStateToCurrentState();  // Refresh for fallback
+            arm_move_group_->setMaxVelocityScalingFactor(0.05);
+            arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+            arm_move_group_->setPoseTarget(retreat_pose);
+            retreat_code = arm_move_group_->plan(retreat_plan);
+            
+            if (retreat_code != moveit::core::MoveItErrorCode::SUCCESS) {
+                out.error_code = "RETREAT_PLAN_FAILED"; 
+                return out;
+            }
+        }
+        
+        if (arm_move_group_->execute(retreat_plan) != moveit::core::MoveItErrorCode::SUCCESS) {
+            out.error_code = "RETREAT_EXEC_FAILED"; 
+            return out;
+        }
+
+        out.success = true;
+        out.error_code = "SUCCESS";
+        out.error_description = "Place sequence completed.";
+        return out;
+    }
+
+
+
     // ------------------------------
     // Members
     // ------------------------------
     std::mutex exec_mutex_;
-
-    std::string arm_group_name_;
-    std::string gripper_group_name_;
-    std::string gripper_open_target_;
-    std::string gripper_close_target_;
-
-    std::string gripper_joint_name_;
-    double gripper_open_value_{0.0};
-    double gripper_close_value_{1.0};
-
+    std::string arm_group_name_, gripper_group_name_;
+    std::string gripper_open_target_, gripper_close_target_, gripper_joint_name_;
+    double gripper_open_value_{0.0}, gripper_close_value_{1.0};
+    double default_pre_grasp_distance_{0.15}, default_lift_distance_{0.15};
+    double grasp_approach_velocity_{0.05}, grasp_close_velocity_{0.3}, grasp_lift_velocity_{0.05};
+    std::string joint_planner_pipeline_{"ompl"}, joint_planner_id_{"RRTConnect"};
+    double joint_planning_time_{5.0};
+    std::string pose_planner_pipeline_{"pilz_industrial_motion_planner"}, pose_planner_id_{"LIN"};
+    double pose_planning_time_{3.0};
+    bool pose_use_ompl_fallback_{true};
     int joint_dof_expected_{-1};
-
-    std::shared_ptr<moveit::planning_interface::MoveGroupInterface> arm_move_group_;
-    std::shared_ptr<moveit::planning_interface::MoveGroupInterface> gripper_move_group_;
-
+    std::shared_ptr<moveit::planning_interface::MoveGroupInterface> arm_move_group_, gripper_move_group_;
     rclcpp_action::Server<ExecuteMotion>::SharedPtr action_server_;
 };
 
