@@ -21,7 +21,7 @@ class ProcessGrasps(Node):
         super().__init__("process_grasps")
 
         # -------- params --------
-        self.declare_parameter("predictions_path", "/root/workspaces/ros-ai-agent/predictions/predictions_rgbd_image.npz")
+        self.declare_parameter("predictions_path", "/root/workspaces/ros-ai-agent/predictions/predictions_rgbd_sgmtd.npz")
         self.declare_parameter("publish_topic", "/grasp_pose")
         self.declare_parameter("base_frame", "base_link")
         self.declare_parameter("camera_frame", "camera_link")
@@ -115,8 +115,51 @@ class ProcessGrasps(Node):
                 self.get_logger().error("predictions file missing keys: 'pred_grasps_cam' and/or 'scores'")
                 return
 
-            pred_grasps_cam = data["pred_grasps_cam"].item()[-1]  # Nx4x4
-            scores = data["scores"].item()[-1]                   # N
+            # Handle both Contact-GraspNet format (direct arrays) and legacy format (wrapped in .item())
+            pred_grasps_raw = data["pred_grasps_cam"]
+            scores_raw = data["scores"]
+            
+            # DEBUG
+            # self.get_logger().info(f"pred_grasps_raw type: {type(pred_grasps_raw)}, dtype: {pred_grasps_raw.dtype if hasattr(pred_grasps_raw, 'dtype') else 'N/A'}")
+            # self.get_logger().info(f"scores_raw type: {type(scores_raw)}, dtype: {scores_raw.dtype if hasattr(scores_raw, 'dtype') else 'N/A'}")
+            
+            # Check if wrapped in object array (legacy format)
+            if hasattr(pred_grasps_raw, 'dtype') and pred_grasps_raw.dtype == object:
+                # Object array - need to extract
+                self.get_logger().info("Detected object array, extracting...")
+                
+                # Extract from object array
+                pred_grasps_unwrapped = pred_grasps_raw.item()
+                scores_unwrapped = scores_raw.item()
+                
+                # self.get_logger().info(f"After .item(): pred_grasps type={type(pred_grasps_unwrapped)}, scores type={type(scores_unwrapped)}")
+                
+                # Check if it's a dict (Contact-GraspNet batched format)
+                if isinstance(pred_grasps_unwrapped, dict):
+                    # Dict format: {0: array, 1: array, ...} - take last key
+                    keys = sorted(pred_grasps_unwrapped.keys())
+                    last_key = keys[-1]
+                    pred_grasps_cam = pred_grasps_unwrapped[last_key]
+                    scores = scores_unwrapped[last_key]
+                    # self.get_logger().info(f"Extracted from dict key {last_key}")
+                # Check if it's a list
+                elif isinstance(pred_grasps_unwrapped, list):
+                    pred_grasps_cam = pred_grasps_unwrapped[-1]
+                    scores = scores_unwrapped[-1]
+                   # self.get_logger().info("Extracted from list")
+                else:
+                    # Direct array
+                    pred_grasps_cam = pred_grasps_unwrapped
+                    scores = scores_unwrapped
+            else:
+                # Contact-GraspNet direct format: use as-is
+               # self.get_logger().info("Using direct array format")
+                pred_grasps_cam = pred_grasps_raw
+                scores = scores_raw
+
+            # DEBUG
+            # self.get_logger().info(f"Final: pred_grasps_cam type={type(pred_grasps_cam)}, shape={pred_grasps_cam.shape if hasattr(pred_grasps_cam, 'shape') else 'N/A'}")
+            # self.get_logger().info(f"Final: scores type={type(scores)}, shape={scores.shape if hasattr(scores, 'shape') else 'N/A'}")
 
             if pred_grasps_cam.shape[0] == 0:
                 self.get_logger().info("No grasps in predictions file.")
@@ -126,7 +169,9 @@ class ProcessGrasps(Node):
             T_cam_grasp = pred_grasps_cam[best_idx]
 
         except Exception as e:
-            self.get_logger().warn(f"Could not load predictions yet: {e}")
+            self.get_logger().warn(f"Could not load predictions: {e}")
+            import traceback
+            self.get_logger().warn(traceback.format_exc())
             return
 
         # build PoseStamped in camera frame
@@ -208,7 +253,7 @@ class ProcessGrasps(Node):
         T_offset[0, 3] = self.eef_offset_x
         T_offset[2, 3] = self.eef_offset_z
 
-        T_base_grasp = T_base_cam @ T_cam_grasp @ T_offset
+        T_base_grasp = T_base_cam @ T_cam_grasp
 
         out = PoseStamped()
         out.header.frame_id = self.base_frame
@@ -250,7 +295,7 @@ def main(args=None):
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        node.get_logger().info("Keyboard interrupt recieved, shutting down...")
+        node.get_logger().info("Keyboard interrupt received, shutting down...")
     finally:
         node.destroy_node()
         rclpy.shutdown()

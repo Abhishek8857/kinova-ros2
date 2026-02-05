@@ -95,11 +95,13 @@ private:
 
         shape_msgs::msg::SolidPrimitive base_primitives;
         base_primitives.type = base_primitives.BOX;
-        base_primitives.dimensions = {1.0, 1.0, 0.01};
+        base_primitives.dimensions = {0.8, 1.0, 0.01};
 
         geometry_msgs::msg::Pose base_pose;
         base_pose.orientation.w = 1.0;
         base_pose.position.z = -0.05;
+        base_pose.position.x = 0.1;
+
 
         base.primitives.push_back(base_primitives);
         base.primitive_poses.push_back(base_pose);
@@ -114,13 +116,15 @@ private:
 
         shape_msgs::msg::SolidPrimitive roof_primitives;
         roof_primitives.type = roof_primitives.BOX;
-        roof_primitives.dimensions = {1.0, 1.0, 0.01};
+        roof_primitives.dimensions = {0.8, 1.0, 0.01};
 
         geometry_msgs::msg::Pose roof_pose;
         roof_pose.orientation.w = 1.0;
-        roof_pose.position.z = 1.5;
+        roof_pose.position.z = 1.44;
+        roof_pose.position.x = 0.1;
 
-        roof.primitives.push_back(base_primitives);
+
+        roof.primitives.push_back(roof_primitives);
         roof.primitive_poses.push_back(roof_pose);
         roof.operation = roof.ADD;
         workspace_elements.push_back(roof);
@@ -132,13 +136,13 @@ private:
 
         shape_msgs::msg::SolidPrimitive back_wall_primitives;
         back_wall_primitives.type = back_wall_primitives.BOX;
-        back_wall_primitives.dimensions = {0.01, 1.01, 1.52};
+        back_wall_primitives.dimensions = {0.01, 1.01, 1.5};
 
         geometry_msgs::msg::Pose back_wall_pose;
         back_wall_pose.orientation.w = 1.0;
         back_wall_pose.position.x = -0.3;
         back_wall_pose.position.y = 0.0;
-        back_wall_pose.position.z = 0.745;
+        back_wall_pose.position.z = 0.695;
 
         back_wall.primitives.push_back(back_wall_primitives);
         back_wall.primitive_poses.push_back(back_wall_pose);
@@ -152,13 +156,13 @@ private:
 
         shape_msgs::msg::SolidPrimitive left_wall_primitives;
         left_wall_primitives.type = left_wall_primitives.BOX;
-        left_wall_primitives.dimensions = {1.0, 0.01, 1.52};
+        left_wall_primitives.dimensions = {0.8, 0.01, 1.5};
 
         geometry_msgs::msg::Pose left_wall_pose;
         left_wall_pose.orientation.w = 1.0;
-        left_wall.pose.position.x = 0.0;
+        left_wall.pose.position.x = 0.1;
         left_wall.pose.position.y = -0.5;
-        left_wall.pose.position.z = 0.745;
+        left_wall.pose.position.z = 0.695;
 
         left_wall.primitives.push_back(left_wall_primitives);
         left_wall.primitive_poses.push_back(left_wall_pose);
@@ -172,13 +176,13 @@ private:
 
         shape_msgs::msg::SolidPrimitive right_wall_primitives;
         right_wall_primitives.type = right_wall_primitives.BOX;
-        right_wall_primitives.dimensions = {1.0, 0.01, 1.52};
+        right_wall_primitives.dimensions = {0.8, 0.01, 1.5};
 
         geometry_msgs::msg::Pose right_wall_pose;
         right_wall_pose.orientation.w = 1.0;
-        right_wall_pose.position.x = 0.0;
+        right_wall_pose.position.x = 0.1;
         right_wall_pose.position.y = 0.5;
-        right_wall_pose.position.z = 0.745;
+        right_wall_pose.position.z = 0.695;
 
         right_wall.primitives.push_back(right_wall_primitives);
         right_wall.primitive_poses.push_back(right_wall_pose);
@@ -204,8 +208,8 @@ private:
         arm_move_group_->setPlanningPipelineId(joint_planner_pipeline_);
         arm_move_group_->setPlannerId(joint_planner_id_);
         arm_move_group_->setPlanningTime(joint_planning_time_);
-        arm_move_group_->setMaxVelocityScalingFactor(0.10);
-        arm_move_group_->setMaxAccelerationScalingFactor(0.10);
+        arm_move_group_->setMaxVelocityScalingFactor(0.20);
+        arm_move_group_->setMaxAccelerationScalingFactor(0.20);
     }
 
     void configure_for_pose_planning()
@@ -214,8 +218,8 @@ private:
         arm_move_group_->setPlanningPipelineId(pose_planner_pipeline_);
         arm_move_group_->setPlannerId(pose_planner_id_);
         arm_move_group_->setPlanningTime(pose_planning_time_);
-        arm_move_group_->setMaxVelocityScalingFactor(0.10);
-        arm_move_group_->setMaxAccelerationScalingFactor(0.10);
+        arm_move_group_->setMaxVelocityScalingFactor(0.15);
+        arm_move_group_->setMaxAccelerationScalingFactor(0.15);
     }
 
     void configure_for_gripper_closing()
@@ -660,9 +664,9 @@ private:
         }
 
         geometry_msgs::msg::Pose grasp_pose;
-        grasp_pose.position.x = data[1]; 
+        grasp_pose.position.x = data[1] +0.025; 
         grasp_pose.position.y = data[2]; 
-        grasp_pose.position.z = data[3] + 0.025;
+        grasp_pose.position.z = data[3] + 0.05;
         grasp_pose.orientation.x = data[4]; 
         grasp_pose.orientation.y = data[5];
         grasp_pose.orientation.z = data[6]; 
