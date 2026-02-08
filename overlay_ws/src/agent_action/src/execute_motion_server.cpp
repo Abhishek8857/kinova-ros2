@@ -664,7 +664,7 @@ private:
         }
 
         geometry_msgs::msg::Pose grasp_pose;
-        grasp_pose.position.x = data[1] +0.025; 
+        grasp_pose.position.x = data[1] + 0.0225; 
         grasp_pose.position.y = data[2]; 
         grasp_pose.position.z = data[3] + 0.05;
         grasp_pose.orientation.x = data[4]; 

@@ -1,3 +1,5 @@
+
+
 #!/bin/bash
 
 SCRIPT_DIR="$(dirname $(readlink -f $0))"
@@ -23,9 +25,9 @@ docker run \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		--env RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION} \
 		--env DISPLAY=$DISPLAY \
-        --name isaac_sim \
+        --name motion_server \
         -v "$REPO_DIR:/kinova-ros2:rw" \
         -v $PARENT_DIR:/root/workspaces/:rw \
         -w /kinova-ros2 \
     	$IMAGE_NAME \
-        /kinova-ros2/entrypoint_scripts/entrypoint_isaac_sim.sh
+        /kinova-ros2/entrypoint_scripts/entrypoint_motion_server.sh
