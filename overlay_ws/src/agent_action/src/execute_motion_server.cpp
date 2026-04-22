@@ -261,16 +261,16 @@ private:
     }
 
 
-    geometry_msgs::msg::Pose compute_pre_grasp_pose(const geometry_msgs::msg::Pose& grasp_pose, double offset_distance)
+    geometry_msgs::msg::Pose compute_pre_pose(const geometry_msgs::msg::Pose& grasp_pose, double offset_distance)
     {
         // SIMPLE APPROACH: Just offset upward in world Z-axis
         // This is more reliable than trying to guess gripper frame orientation
         // Works for top-down grasps (most common in pick-and-place)
         
-        // geometry_msgs::msg::Pose pre_grasp_pose = grasp_pose;
-        // pre_grasp_pose.position.z += offset_distance;  // Move UP in world frame
+        // geometry_msgs::msg::Pose pre_pose = grasp_pose;
+        // pre_pose.position.z += offset_distance;  // Move UP in world frame
         
-        // return pre_grasp_pose;
+        // return pre_pose;
         
         // ALTERNATIVE: Use gripper frame Z-axis if you know your gripper convention
         // Uncomment below if gripper Z-axis points down toward object:
@@ -283,12 +283,12 @@ private:
         tf2::Vector3 retreat_direction(0, 0, -1);  // Negative Z in gripper = away from object
         tf2::Vector3 retreat_world = m * retreat_direction;
         
-        geometry_msgs::msg::Pose pre_grasp_pose = grasp_pose;
-        pre_grasp_pose.position.x += retreat_world.x() * offset_distance;
-        pre_grasp_pose.position.y += retreat_world.y() * offset_distance;
-        pre_grasp_pose.position.z += retreat_world.z() * offset_distance;
+        geometry_msgs::msg::Pose pre_pose = grasp_pose;
+        pre_pose.position.x += retreat_world.x() * offset_distance;
+        pre_pose.position.y += retreat_world.y() * offset_distance;
+        pre_pose.position.z += retreat_world.z() * offset_distance;
         
-        return pre_grasp_pose;
+        return pre_pose;
         
     }
 
@@ -708,11 +708,8 @@ private:
         fb->progress = 0.40f; 
         goal_handle->publish_feedback(fb);
         
-        geometry_msgs::msg::Pose pre_grasp = compute_pre_grasp_pose(grasp_pose, pre_grasp_offset);
+        geometry_msgs::msg::Pose pre_grasp = compute_pre_pose(grasp_pose, pre_grasp_offset);
         configure_for_pose_planning();
-
-        log_pose("GRASP POSE: ", grasp_pose);
-        log_pose("PRE GRASP: ", pre_grasp);
         
         // CRITICAL FIX: Set start state to current state before planning
         arm_move_group_->setStartStateToCurrentState();
@@ -881,42 +878,76 @@ private:
         double retreat_dist = (data.size() >= 9) ? data[8] : default_lift_distance_;
         auto fb = std::make_shared<ExecuteMotion::Feedback>();
 
-        // Step 1: Move to place pose
-        RCLCPP_INFO(this->get_logger(), "Place Step 1/3: Moving to place pose");
+
+        // Step 1: Move to pre.place pose
+        RCLCPP_INFO(this->get_logger(), "Place Step 1/4: Moveing to Pre place pose");
+        fb->state = "MOVING_TO_PRE_PLACE";
+        fb->state = 0.25f;
+        goal_handle->publish_feedback(fb);
+
+        double pre_place_offset = (data.size() >= 9) ? data[8] : default_pre_place_distance_;
+        geometry_msgs::msg::Pose pre_place = compute_pre_pose(place_pose, pre_place_offset);
+
+        configure_for_pose_planning();
+
+        arm_move_group_->setStartStateToCurrentState();
+        arm_move_group_->setPoseTarget(pre_place);
+
+        moveit::planning_interface::MoveGroupInterface::Plan pre_place_plan;
+        auto pre_place_code = arm_move_group_->plan(pre_place_plan);
+        
+        if (pre_place_code != moveit::core::MoveItErrorCode::SUCCESS) {
+            configure_for_joint_planning();
+            arm_move_group_->setStartStateToCurrentState();  // Refresh for fallback
+            arm_move_group_->setPoseTarget(pre_place);
+            pre_place_code = arm_move_group_->plan(pre_place_plan);
+            if (pre_place_code != moveit::core::MoveItErrorCode::SUCCESS) {
+                out.error_code = "PRE_PLACE_PLAN_FAILED"; 
+                return out;
+            }
+        }
+        
+        if (arm_move_group_->execute(pre_place_plan) != moveit::core::MoveItErrorCode::SUCCESS) {
+            out.error_code = "PRE_PLACE_EXEC_FAILED"; 
+            return out;
+        }
+
+        // Step 2: Move to place pose
+        RCLCPP_INFO(this->get_logger(), "Place Step 2/4: Moving to place pose");
         fb->state = "MOVING_TO_PLACE"; 
-        fb->progress = 0.33f; 
+        fb->progress = 0.5f; 
         goal_handle->publish_feedback(fb);
         
         configure_for_pose_planning();
         
         // CRITICAL FIX: Set start state to current state before planning
         arm_move_group_->setStartStateToCurrentState();
-        
         arm_move_group_->setPoseTarget(place_pose);
         
-        moveit::planning_interface::MoveGroupInterface::Plan pplan;
-        auto pcode = arm_move_group_->plan(pplan);
+        moveit::planning_interface::MoveGroupInterface::Plan place_plan;
+        auto place_code = arm_move_group_->plan(place_plan);
         
-        if (pcode != moveit::core::MoveItErrorCode::SUCCESS) {
+        if (place_code != moveit::core::MoveItErrorCode::SUCCESS) {
             configure_for_joint_planning();
             arm_move_group_->setStartStateToCurrentState();  // Refresh for fallback
             arm_move_group_->setPoseTarget(place_pose);
-            pcode = arm_move_group_->plan(pplan);
-            if (pcode != moveit::core::MoveItErrorCode::SUCCESS) {
+            place_code = arm_move_group_->plan(place_plan);
+            if (place_code != moveit::core::MoveItErrorCode::SUCCESS) {
                 out.error_code = "PLACE_PLAN_FAILED"; 
                 return out;
             }
         }
         
-        if (arm_move_group_->execute(pplan) != moveit::core::MoveItErrorCode::SUCCESS) {
+        if (arm_move_group_->execute(place_plan) != moveit::core::MoveItErrorCode::SUCCESS) {
             out.error_code = "PLACE_EXEC_FAILED"; 
             return out;
         }
 
-        // Step 2: Open gripper
-        RCLCPP_INFO(this->get_logger(), "Place Step 2/3: Opening gripper");
+        // Step 3: Open gripper
+        RCLCPP_INFO(this->get_logger(), "Place Step 3/4: Opening gripper");
+        rclcpp::sleep_for(std::chrono::seconds(1));
         fb->state = "RELEASING_OBJECT"; 
-        fb->progress = 0.66f; 
+        fb->progress = 0.75f; 
         goal_handle->publish_feedback(fb);
         
         if (!gripper_move_group_->setNamedTarget(gripper_open_target_)) {
@@ -931,8 +962,9 @@ private:
             return out;
         }
 
-        // Step 3: Retreat using simple pose planning (SIMPLIFIED - NO CARTESIAN)
-        RCLCPP_INFO(this->get_logger(), "Place Step 3/3: Retreating");
+        // Step 4: Retreat using simple pose planning (SIMPLIFIED - NO CARTESIAN)
+        RCLCPP_INFO(this->get_logger(), "Place Step 4/4: Retreating");
+        rclcpp::sleep_for(std::chrono::seconds(1));  // 0.5 seconds
         fb->state = "RETREATING"; 
         fb->progress = 0.90f; 
         goal_handle->publish_feedback(fb);
@@ -990,7 +1022,7 @@ private:
     std::string arm_group_name_, gripper_group_name_;
     std::string gripper_open_target_, gripper_close_target_, gripper_joint_name_;
     double gripper_open_value_{0.0}, gripper_close_value_{1.0};
-    double default_pre_grasp_distance_{0.15}, default_lift_distance_{0.15};
+    double default_pre_grasp_distance_{0.15}, default_lift_distance_{0.15}, default_pre_place_distance_{0.15};
     double grasp_approach_velocity_{0.05}, grasp_close_velocity_{0.3}, grasp_lift_velocity_{0.05};
     std::string joint_planner_pipeline_{"ompl"}, joint_planner_id_{"RRTConnect"};
     double joint_planning_time_{5.0};
