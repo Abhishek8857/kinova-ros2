@@ -23,7 +23,7 @@ docker run \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		--env RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION} \
 		--env DISPLAY=$DISPLAY \
-        --name isaac_sim \
+        --name isaac_sim_kinova \
         -v "$REPO_DIR:/kinova-ros2:rw" \
         -v $PARENT_DIR:/root/workspaces/:rw \
         -w /kinova-ros2 \
