@@ -165,7 +165,13 @@ class ProcessGrasps(Node):
 
             if pred_grasps_cam.shape[0] == 0:
                 self.get_logger().info("No grasps in predictions file.")
-                return
+                # delete predictions if no grasps generated 
+                try:
+                    os.remove(self.predictions_path)
+                except Exception as e:
+                    self.get_logger().warn(f"Could not delete predictions file: {e}")
+                finally:
+                    return
 
             best_idx = int(np.argmax(scores))
             T_cam_grasp = pred_grasps_cam[best_idx]
