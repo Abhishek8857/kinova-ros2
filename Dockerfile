@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y \
     libgstreamer-plugins-good1.0-dev \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-base \
+    ros-${ROS_DISTRO}-depth-image-proc \
     # clear all the cache and index files
     && apt-get clean && rm -rf /var/lib/apt/lists/*
           
