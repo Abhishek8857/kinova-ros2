@@ -663,6 +663,7 @@ private:
             return out;
         }
 
+        // SIM OFFSETS
         geometry_msgs::msg::Pose grasp_pose;
         grasp_pose.position.x = data[1] + 0.0225; 
         grasp_pose.position.y = data[2]; 
@@ -671,6 +672,26 @@ private:
         grasp_pose.orientation.y = data[5];
         grasp_pose.orientation.z = data[6]; 
         grasp_pose.orientation.w = data[7];
+
+        // REAL KINOVA OFFSETS
+        // const double Y_OFFSET_POS = 0.0;  
+        // const double Y_OFFSET_NEG =  - 0.025;  
+
+        // geometry_msgs::msg::Pose grasp_pose;
+        // grasp_pose.position.x = data[1] - 0.025;
+
+        // if (data[2] > 0.0) {
+        //     grasp_pose.position.y = data[2] + Y_OFFSET_POS;
+        // } else if (data[2] < 0.0) {
+        //     grasp_pose.position.y = data[2] + Y_OFFSET_NEG;
+        // } else {
+        //     grasp_pose.position.y = data[2]; // Exactly 0.0
+        // }
+        // grasp_pose.position.z = data[3] + 0.05;
+        // grasp_pose.orientation.x = data[4]; 
+        // grasp_pose.orientation.y = data[5];
+        // grasp_pose.orientation.z = data[6]; 
+        // grasp_pose.orientation.w = data[7];
 
         double pre_grasp_offset = (data.size() >= 9) ? data[8] : default_pre_grasp_distance_;
         double lift_height = (data.size() >= 10) ? data[9] : default_lift_distance_;
@@ -752,8 +773,8 @@ private:
         arm_move_group_->setPlanningPipelineId("pilz_industrial_motion_planner");
         arm_move_group_->setPlannerId("LIN");
         arm_move_group_->setPlanningTime(5.0);
-        arm_move_group_->setMaxVelocityScalingFactor(0.05);  // Slow and controlled
-        arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+        arm_move_group_->setMaxVelocityScalingFactor(0.1);  // Slow and controlled
+        arm_move_group_->setMaxAccelerationScalingFactor(0.1);
         arm_move_group_->setPoseTarget(grasp_pose);
         
         moveit::planning_interface::MoveGroupInterface::Plan approach_plan;
@@ -764,8 +785,8 @@ private:
             RCLCPP_WARN(this->get_logger(), "LIN planner failed, trying OMPL fallback");
             configure_for_joint_planning();
             arm_move_group_->setStartStateToCurrentState();  // Set again for OMPL
-            arm_move_group_->setMaxVelocityScalingFactor(0.05);
-            arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+            arm_move_group_->setMaxVelocityScalingFactor(0.1);
+            arm_move_group_->setMaxAccelerationScalingFactor(0.1);
             arm_move_group_->setPoseTarget(grasp_pose);
             approach_code = arm_move_group_->plan(approach_plan);
             
@@ -819,8 +840,8 @@ private:
         arm_move_group_->setPlanningPipelineId("pilz_industrial_motion_planner");
         arm_move_group_->setPlannerId("LIN");
         arm_move_group_->setPlanningTime(5.0);
-        arm_move_group_->setMaxVelocityScalingFactor(0.05);
-        arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+        arm_move_group_->setMaxVelocityScalingFactor(0.1);
+        arm_move_group_->setMaxAccelerationScalingFactor(0.1);
         arm_move_group_->setPoseTarget(lift_pose);
         
         moveit::planning_interface::MoveGroupInterface::Plan lift_plan;
@@ -831,8 +852,8 @@ private:
             RCLCPP_WARN(this->get_logger(), "LIN planner failed for lift, trying OMPL fallback");
             configure_for_joint_planning();
             arm_move_group_->setStartStateToCurrentState();  // Set again for fallback
-            arm_move_group_->setMaxVelocityScalingFactor(0.05);
-            arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+            arm_move_group_->setMaxVelocityScalingFactor(0.1);
+            arm_move_group_->setMaxAccelerationScalingFactor(0.1);
             arm_move_group_->setPoseTarget(lift_pose);
             lift_code = arm_move_group_->plan(lift_plan);
             
@@ -979,8 +1000,8 @@ private:
         arm_move_group_->setPlanningPipelineId("pilz_industrial_motion_planner");
         arm_move_group_->setPlannerId("LIN");
         arm_move_group_->setPlanningTime(5.0);
-        arm_move_group_->setMaxVelocityScalingFactor(0.05);
-        arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+        arm_move_group_->setMaxVelocityScalingFactor(0.1);
+        arm_move_group_->setMaxAccelerationScalingFactor(0.1);
         arm_move_group_->setPoseTarget(retreat_pose);
         
         moveit::planning_interface::MoveGroupInterface::Plan retreat_plan;
@@ -991,8 +1012,8 @@ private:
             RCLCPP_WARN(this->get_logger(), "LIN planner failed for retreat, trying OMPL fallback");
             configure_for_joint_planning();
             arm_move_group_->setStartStateToCurrentState();  // Refresh for fallback
-            arm_move_group_->setMaxVelocityScalingFactor(0.05);
-            arm_move_group_->setMaxAccelerationScalingFactor(0.05);
+            arm_move_group_->setMaxVelocityScalingFactor(0.1);
+            arm_move_group_->setMaxAccelerationScalingFactor(0.1);
             arm_move_group_->setPoseTarget(retreat_pose);
             retreat_code = arm_move_group_->plan(retreat_plan);
             
